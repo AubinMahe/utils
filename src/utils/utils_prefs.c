@@ -10,7 +10,7 @@
 typedef struct {
    char      rcpath[PATH_MAX];
    utils_map map;
-} preferences_private;
+} utils_prefs_private;
 
 
 static int property_name_compare( const void * l, const void * r ) {
@@ -19,17 +19,17 @@ static int property_name_compare( const void * l, const void * r ) {
    return strcmp( *pl, *pr );
 }
 
-bool preferences_load( preferences * prefs, const char * program_name ) {
+bool utils_prefs_load( utils_prefs * prefs, const char * program_name ) {
    if(( prefs == NULL )||( program_name == NULL )) {
       return false;
    }
-   preferences_private * This = malloc( sizeof( preferences_private ));
+   utils_prefs_private * This = malloc( sizeof( utils_prefs_private ));
    if( This == NULL ) {
       perror( "malloc" );
       return false;
    }
-   memset( This, 0, sizeof( preferences_private ));
-   *prefs = (preferences)This;
+   memset( This, 0, sizeof( utils_prefs_private ));
+   *prefs = (utils_prefs)This;
    snprintf( This->rcpath, PATH_MAX, ".%src", program_name );
    FILE * chatrc = fopen( This->rcpath, "rt" );
    if( chatrc == NULL ) {
@@ -77,7 +77,7 @@ bool preferences_load( preferences * prefs, const char * program_name ) {
          sep = ( equal < colon ) ? equal : colon;
       }
       if( sep - prop_name < 0 ) {
-         fprintf( stderr, "%s: preferences file syntax error at line %d\n", This->rcpath, line );
+         fprintf( stderr, "%s: utils_prefs file syntax error at line %d\n", This->rcpath, line );
          return false;
       }
       *sep = '\0';
@@ -94,18 +94,18 @@ bool preferences_load( preferences * prefs, const char * program_name ) {
    return true;
 }
 
-bool preferences_get_path( preferences prefs, const char ** dest ) {
+bool utils_prefs_get_path( utils_prefs prefs, const char ** dest ) {
    if(( prefs == NULL )||( dest == NULL )) {
       return false;
    }
-   preferences_private * This = (preferences_private *)prefs;
+   utils_prefs_private * This = (utils_prefs_private *)prefs;
    *dest = This->rcpath;
    return true;
 }
 
-bool preferences_get_boolean( preferences prefs, const char * name, bool * value ) {
+bool utils_prefs_get_boolean( utils_prefs prefs, const char * name, bool * value ) {
    const char * s = NULL;
-   if( preferences_get_string( prefs, name, &s )) {
+   if( utils_prefs_get_string( prefs, name, &s )) {
       if( 0 == strcmp( "true", s )) {
          *value = true;
          return true;
@@ -118,27 +118,27 @@ bool preferences_get_boolean( preferences prefs, const char * name, bool * value
    return false;
 }
 
-bool preferences_get_ushort( preferences prefs, const char * name, unsigned short * value ) {
+bool utils_prefs_get_ushort( utils_prefs prefs, const char * name, unsigned short * value ) {
    long lg = 0;
-   if( preferences_get_long( prefs, name, &lg )) {
+   if( utils_prefs_get_long( prefs, name, &lg )) {
       *value = (unsigned short)lg;
       return true;
    }
    return false;
 }
 
-bool preferences_get_int( preferences prefs, const char * name, int * value ) {
+bool utils_prefs_get_int( utils_prefs prefs, const char * name, int * value ) {
    long lg = 0;
-   if( preferences_get_long( prefs, name, &lg )) {
+   if( utils_prefs_get_long( prefs, name, &lg )) {
       *value = (int)lg;
       return true;
    }
    return false;
 }
 
-bool preferences_get_long( preferences prefs, const char * name, long * value ) {
+bool utils_prefs_get_long( utils_prefs prefs, const char * name, long * value ) {
    const char * s = NULL;
-   if( ! preferences_get_string( prefs, name, &s )) {
+   if( ! utils_prefs_get_string( prefs, name, &s )) {
       return false;
    }
    int base  = 10;
@@ -151,11 +151,11 @@ bool preferences_get_long( preferences prefs, const char * name, long * value ) 
    return err &&( *err == '\0' );
 }
 
-bool preferences_get_string( preferences prefs, const char * name, const char ** value ) {
+bool utils_prefs_get_string( utils_prefs prefs, const char * name, const char ** value ) {
    if(( prefs == NULL )||( name == NULL )||( value == NULL )) {
       return false;
    }
-   preferences_private * This = (preferences_private *)prefs;
+   utils_prefs_private * This = (utils_prefs_private *)prefs;
    if( This->map == NULL ) {
       return false;
    }
@@ -167,11 +167,11 @@ bool preferences_get_string( preferences prefs, const char * name, const char **
    return true;
 }
 
-bool preferences_delete( preferences * prefs ) {
+bool utils_prefs_delete( utils_prefs * prefs ) {
    if( prefs == NULL ) {
       return false;
    }
-   preferences_private * This = (preferences_private *)*prefs;
+   utils_prefs_private * This = (utils_prefs_private *)*prefs;
    if( This->map ) {
       utils_map_delete( &This->map, true );
    }

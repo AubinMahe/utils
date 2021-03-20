@@ -5,6 +5,7 @@ CFLAGS = -pthread -std=c11 -I inc -fvisibility=hidden -D_DEFAULT_SOURCE=__STRICT
 
 SRCS =\
  src/net/net_buff.c\
+ src/utils/utils_cli.c\
  src/utils/utils_map.c\
  src/utils/utils_prefs.c\
  src/utils/utils_set.c
@@ -12,6 +13,7 @@ SRCS =\
 SRCS_TST =\
  test/main.c\
  test/tests_report.c\
+ test/utils_cli_test.c\
  test/utils_prefs_test.c\
  test/utils_set_test.c
 
