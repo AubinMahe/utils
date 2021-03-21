@@ -55,6 +55,7 @@ int tests_run( int argc, char * argv[], ... ) {
             chapter->selected = true;
             found = true;
          }
+         chapter = chapter->next;
       }
       if( ! found ) {
          fprintf( stderr, "Unexpected argument: %s\n", arg );
@@ -62,13 +63,16 @@ int tests_run( int argc, char * argv[], ... ) {
          chapter = This.tests;
          while( chapter ) {
             fprintf( stderr, "\t%s\n", chapter->name );
+            chapter = chapter->next;
          }
          return EXIT_FAILURE;
       }
    }
    tests_chapter_t * chapter = This.tests;
    while( chapter ) {
-      chapter->func( &This );
+      if( chapter->selected ) {
+         chapter->func( &This );
+      }
       chapter = chapter->next;
    }
    tests_ended( &This );
