@@ -87,6 +87,9 @@ bool utils_map_get( utils_map map, const void * key, void ** value ) {
       return false;
    }
    utils_map_private * This = (utils_map_private *)map;
+   if( This->data == NULL ) {
+      return false;
+   }
    pair   kvp = { key, NULL };
    pair * p = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
    if( p == NULL ) {

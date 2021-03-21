@@ -47,6 +47,8 @@ void utils_map_test( struct tests_report * report ) {
    ASSERT( report, card == 0 );
    ASSERT( report, utils_map_contains( map, "Aubin", &own ));
    ASSERT( report, own == false );
+   ASSERT( report, utils_map_get     ( map, "Muriel", (void *)&data ) == false );
+   ASSERT( report, data == NULL );
    ASSERT( report, utils_map_put     ( map, "Muriel", muriel_birthday ));
    ASSERT( report, utils_map_put     ( map, "Eve"   , eve_birthday    ));
    ASSERT( report, utils_map_put     ( map, "Aubin" , aubin_birthday  ));
