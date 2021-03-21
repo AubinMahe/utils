@@ -189,11 +189,13 @@ bool net_buff_encode_int64( net_buff nb, int64_t value ) {
 }
 
 bool net_buff_encode_float( net_buff nb, float src ) {
-   return net_buff_encode_uint32( nb, *(uint32_t *)&src );
+   void * ptr = &src;
+   return net_buff_encode_uint32( nb, *(uint32_t*)ptr );
 }
 
 bool net_buff_encode_double( net_buff nb, double src ) {
-   return net_buff_encode_uint64( nb, *(uint64_t *)&src );
+   void * ptr = &src;
+   return net_buff_encode_uint64( nb, *(uint64_t *)ptr );
 }
 
 bool net_buff_encode_string( net_buff nb, const char * string ) {

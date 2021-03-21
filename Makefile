@@ -28,6 +28,11 @@ DEPS_TST     = $(SRCS_TST:%c=BUILD/%d)
 .PHONY: all
 all: libutils-d.so libutils.so tests-d
 
+.PHONY: check-make
+check-make:
+	@echo "DEPS    : $(DEPS)"
+	@echo "DEPS_TST: $(DEPS_TST)"
+
 .PHONY: validate
 validate: tests-d
 	@g++ test/cplusplus_ckeck.cpp -c -I inc -W -Wall -pedantic
