@@ -1,6 +1,7 @@
 #include "tests_report.h"
 #include "iso6429.h"
 
+#include <execinfo.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -103,13 +104,13 @@ void tests_chapter( struct tests_report * ctxt, const char * title ) {
    }
 }
 
-void tests_assert( struct tests_report * ctxt, const char * test, bool observed, bool expected ) {
-   if( observed == expected ) {
+void tests_assert( struct tests_report * ctxt, const char * test, bool test_result, const char * file, int line ) {
+   if( test_result ) {
       printf( "   %s %s\n", TEST_PASSED, test );
       ++(ctxt->passed);
    }
    else {
-      printf( "   %s %s\n", TEST_FAILED, test );
+      printf( "   %s %s\t\t(%s:%d)\n", TEST_FAILED, test, file, line );
       ++(ctxt->failed);
    }
 }

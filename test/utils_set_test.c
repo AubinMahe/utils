@@ -4,14 +4,22 @@
 
 #include <string.h>
 
-static bool for_each( unsigned index, const void * item, void * user_context ) {
+static bool for_each( size_t index, const void * item, void * user_context ) {
    struct tests_report * report = (struct tests_report *)user_context;
    const bool unexpected_item = true;
    switch( index ) {
-   case 0 : ASSERT( report, strcmp( item, "Aubin"  ), 0 ); return true;
-   case 1 : ASSERT( report, strcmp( item, "Eve"    ), 0 ); return true;
-   case 2 : ASSERT( report, strcmp( item, "Muriel" ), 0 ); return true;
-   default: ASSERT( report, unexpected_item, false ); break;
+   case 0 :
+      ASSERT( report, 0 == strcmp( item, "Aubin"  ));
+      return true;
+   case 1 :
+      ASSERT( report, 0 == strcmp( item, "Eve"    ));
+      return true;
+   case 2 :
+      ASSERT( report, 0 == strcmp( item, "Muriel" ));
+      return true;
+   default:
+      ASSERT( report, unexpected_item == false );
+      break;
    }
    return false;
 }
@@ -24,46 +32,60 @@ static int person_compare( const void * l, const void * r ) {
 
 void utils_set_test( struct tests_report * report ) {
    tests_chapter( report, "Sorted set" );
-   unsigned card = 0;
+   size_t card = 0;
+   bool own = false;
    utils_set set;
-   ASSERT( report, utils_set_new     ( &set, person_compare )          , true  );
-   ASSERT( report, utils_set_size    ( set, &card )                    , true  );
-   ASSERT( report, card == 0                                           , true  );
-   ASSERT( report, utils_set_contains( set, "Aubin" )                  , false );
-   ASSERT( report, utils_set_add     ( set, "Muriel" )                 , true  );
-   ASSERT( report, utils_set_add     ( set, "Eve" )                    , true  );
-   ASSERT( report, utils_set_add     ( set, "Aubin" )                  , true  );
-   ASSERT( report, utils_set_size    ( set, &card )                    , true  );
-   ASSERT( report, card == 3                                           , true  );
-   ASSERT( report, utils_set_contains( set, "Aubin" )                  , true  );
-   ASSERT( report, utils_set_contains( set, "Muriel" )                 , true  );
-   ASSERT( report, utils_set_contains( set, "Eve" )                    , true  );
-   ASSERT( report, utils_set_contains( set, "Toto" )                   , false );
-   ASSERT( report, utils_set_remove  ( set, "Eve", false )             , true  );
-   ASSERT( report, utils_set_contains( set, "Eve" )                    , false );
-   ASSERT( report, utils_set_size    ( set, &card )                    , true  );
-   ASSERT( report, card == 2                                           , true  );
-   ASSERT( report, utils_set_add     ( set, "Eve" )                    , true  );
-   ASSERT( report, utils_set_contains( set, "Eve" )                    , true  );
-   ASSERT( report, utils_set_size    ( set, &card )                    , true  );
-   ASSERT( report, card == 3                                           , true  );
-   ASSERT( report, utils_set_foreach ( set, for_each, report )         , true  );
-   ASSERT( report, utils_set_replace ( set, "Aubin", "Albert" , false ), true  );
-   ASSERT( report, utils_set_size    ( set, &card )                    , true  );
-   ASSERT( report, card == 3                                           , true  );
-   ASSERT( report, utils_set_contains( set, "Aubin" )                  , false );
-   ASSERT( report, utils_set_contains( set, "Albert" )                 , true  );
-   ASSERT( report, utils_set_remove  ( set, "Toto", false )            , false );
-   ASSERT( report, utils_set_size    ( set, &card )                    , true  );
-   ASSERT( report, card == 3                                           , true  );
-   ASSERT( report, utils_set_remove  ( set, "Albert", false )          , true  );
-   ASSERT( report, utils_set_remove  ( set, "Muriel", false )          , true  );
-   ASSERT( report, utils_set_clear   ( set, false )                    , true  );
-   ASSERT( report, utils_set_contains( set, "Aubin" )                  , false );
-   ASSERT( report, utils_set_contains( set, "Muriel" )                 , false );
-   ASSERT( report, utils_set_contains( set, "Eve" )                    , false );
-   ASSERT( report, utils_set_contains( set, "Toto" )                   , false );
-   ASSERT( report, utils_set_size    ( set, &card )                    , true  );
-   ASSERT( report, card == 0                                           , true  );
-   ASSERT( report, utils_set_delete  ( &set, false )                   , true  );
+   ASSERT( report, utils_set_new     ( &set, person_compare ));
+   ASSERT( report, utils_set_size    ( set, &card ));
+   ASSERT( report, card == 0);
+   ASSERT( report, utils_set_contains( set, "Aubin", &own ));
+   ASSERT( report, own == false );
+   ASSERT( report, utils_set_add     ( set, "Muriel" ));
+   ASSERT( report, utils_set_add     ( set, "Eve" ));
+   ASSERT( report, utils_set_add     ( set, "Aubin" ));
+   ASSERT( report, utils_set_size    ( set, &card ));
+   ASSERT( report, card == 3);
+   ASSERT( report, utils_set_contains( set, "Aubin" , &own ));
+   ASSERT( report, own);
+   ASSERT( report, utils_set_contains( set, "Muriel", &own ));
+   ASSERT( report, own);
+   ASSERT( report, utils_set_contains( set, "Eve"   , &own ));
+   ASSERT( report, own);
+   ASSERT( report, utils_set_contains( set, "Toto"  , &own ));
+   ASSERT( report, own == false );
+   ASSERT( report, utils_set_remove  ( set, "Eve", false ));
+   ASSERT( report, utils_set_contains( set, "Eve", &own ));
+   ASSERT( report, own == false );
+   ASSERT( report, utils_set_size    ( set, &card ));
+   ASSERT( report, card == 2);
+   ASSERT( report, utils_set_add     ( set, "Eve" ));
+   ASSERT( report, utils_set_contains( set, "Eve", &own ));
+   ASSERT( report, own);
+   ASSERT( report, utils_set_size    ( set, &card ));
+   ASSERT( report, card == 3);
+   ASSERT( report, utils_set_foreach ( set, for_each, report ));
+   ASSERT( report, utils_set_replace ( set, "Aubin", "Albert" , false ));
+   ASSERT( report, utils_set_size    ( set, &card ));
+   ASSERT( report, card == 3);
+   ASSERT( report, utils_set_contains( set, "Aubin" , &own ));
+   ASSERT( report, own == false );
+   ASSERT( report, utils_set_contains( set, "Albert", &own ));
+   ASSERT( report, own);
+   ASSERT( report, utils_set_remove  ( set, "Toto", false ) == false );
+   ASSERT( report, utils_set_size    ( set, &card ));
+   ASSERT( report, card == 3);
+   ASSERT( report, utils_set_remove  ( set, "Albert", false ));
+   ASSERT( report, utils_set_remove  ( set, "Muriel", false ));
+   ASSERT( report, utils_set_clear   ( set, false ));
+   ASSERT( report, utils_set_contains( set, "Aubin" , &own ));
+   ASSERT( report, own == false );
+   ASSERT( report, utils_set_contains( set, "Muriel", &own ));
+   ASSERT( report, own == false );
+   ASSERT( report, utils_set_contains( set, "Eve"   , &own ));
+   ASSERT( report, own == false );
+   ASSERT( report, utils_set_contains( set, "Toto"  , &own ));
+   ASSERT( report, own == false );
+   ASSERT( report, utils_set_size    ( set, &card ));
+   ASSERT( report, card == 0);
+   ASSERT( report, utils_set_delete  ( &set, false ));
 }

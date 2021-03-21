@@ -13,7 +13,9 @@ SRCS =\
 SRCS_TST =\
  test/main.c\
  test/tests_report.c\
+ test/net_buff_test.c\
  test/utils_cli_test.c\
+ test/utils_map_test.c\
  test/utils_prefs_test.c\
  test/utils_set_test.c
 
@@ -28,6 +30,8 @@ all: libutils-d.so libutils.so tests-d
 
 .PHONY: validate
 validate: tests-d
+	@g++ test/cplusplus_ckeck.cpp -c -I inc -W -Wall -pedantic
+	@rm cplusplus_ckeck.o
 	@LD_LIBRARY_PATH=. ./tests-d
 
 .PHONY: validate-valgrind

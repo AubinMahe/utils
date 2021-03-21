@@ -1,11 +1,18 @@
 #include <utils/utils_map.h>
 
+#include <stdint.h>  // perror
 #include <stdio.h>  // perror
 #include <stdlib.h> // malloc, realloc, qsort, bsearch
+#include <string.h> // memmove
+
+// Astuce pour libérer un pointeur const void * en espérant qu'il ne soit pas "vraiment" const,
+// sinon c'est SIGSEGV !
+// Ne fonctionne que si les pointeurs sont stockables sur 64 bits
+#define CONST_CAST(p)      ((void *)(uint64_t)(p))
 
 typedef struct {
-   void * key;
-   void * value;
+   const void * key;
+   const void * value;
 } pair;
 
 typedef struct {
@@ -30,7 +37,7 @@ bool utils_map_new( utils_map * map, utils_comparator comparator ) {
    return true;
 }
 
-bool utils_map_put( utils_map map, void * key, void * value ) {
+bool utils_map_put( utils_map map, const void * key, const void * value ) {
    if(( map == NULL )||( key == NULL )) {
       return false;
    }
@@ -48,16 +55,67 @@ bool utils_map_put( utils_map map, void * key, void * value ) {
    return true;
 }
 
+bool utils_map_remove( utils_map map, const void * key, bool free_key_and_value ) {
+   if(( map == NULL )||( key == NULL )) {
+      return false;
+   }
+   utils_map_private * This = (utils_map_private *)map;
+   if( This->data == NULL ) {
+      return false;
+   }
+   pair   kvp = { key, NULL };
+   pair * res = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
+   if( res ) {
+      if( free_key_and_value ) {
+         pair * p = (pair *)res;
+         // Astuce pour libérer un pointeur const void * en espérant qu'il ne soit pas "vraiment" const,
+         // sinon c'est SIGSEGV !
+         // Ne fonctionne que si les pointeurs sont stockables sur 64 bits
+         free( CONST_CAST( p->key ));
+         free( CONST_CAST( p->value ));
+      }
+      ssize_t index = res - This->data;
+      --This->count;
+      memmove( res, res + 1, ( This->count - (size_t)index ) * sizeof( pair ));
+      return true;
+   }
+   return false;
+}
+
 bool utils_map_get( utils_map map, const void * key, void ** value ) {
    if(( map == NULL )||( key == NULL )||( value == NULL )) {
       return false;
    }
    utils_map_private * This = (utils_map_private *)map;
-   pair * p = bsearch( &key, This->data, This->count, sizeof( pair ), This->comparator );
+   pair   kvp = { key, NULL };
+   pair * p = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
    if( p == NULL ) {
       return false;
    }
-   *value = p->value;
+   *value = CONST_CAST( p->value );
+   return true;
+}
+
+bool utils_map_contains( utils_map map, const void * key, bool * result ) {
+   if(( map == NULL )||( key == NULL )||( result == NULL )) {
+      return false;
+   }
+   *result = false;
+   utils_map_private * This = (utils_map_private *)map;
+   if( This->data ) {
+      pair   kvp = { key, NULL };
+      pair * res = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
+      *result = ( res != NULL );
+   }
+   return true;
+}
+
+bool utils_map_size( utils_map map, size_t * size ) {
+   if(( map == NULL )||( size == NULL )) {
+      return false;
+   }
+   utils_map_private * This = (utils_map_private *)map;
+   *size = This->count;
    return true;
 }
 
@@ -74,15 +132,15 @@ bool utils_map_foreach( utils_map map, utils_map_iterator iter, void * user_cont
    return true;
 }
 
-bool utils_map_clear( utils_map * map, bool free_key_and_value ) {
+bool utils_map_clear( utils_map map, bool free_key_and_value ) {
    if( map == NULL ) {
       return false;
    }
-   utils_map_private * This = (utils_map_private *)*map;
+   utils_map_private * This = (utils_map_private *)map;
    for( size_t i = 0; i < This->count; ++i ) {
       if( free_key_and_value ) {
-         free( This->data[i].key );
-         free( This->data[i].value );
+         free( CONST_CAST( This->data[i].key ));
+         free( CONST_CAST( This->data[i].value ));
       }
    }
    free( This->data );
@@ -92,7 +150,7 @@ bool utils_map_clear( utils_map * map, bool free_key_and_value ) {
 }
 
 bool utils_map_delete( utils_map * map, bool free_key_and_value ) {
-   if( utils_map_clear( map, free_key_and_value )) {
+   if( map && utils_map_clear( *map, free_key_and_value )) {
       utils_map_private * This = (utils_map_private *)*map;
       free( This->data );
       free( This );

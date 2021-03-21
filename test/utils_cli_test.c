@@ -15,8 +15,8 @@ void utils_cli_test( struct tests_report * report ) {
    char *         argv[]    = { program, address };
    ASSERT( report, utils_cli_new( &options, argc, argv,
       "group", utils_cli_STRING, true ,   NULL, &group,
-      "port" , utils_cli_USHORT, false, "2416", &port, NULL ) , true );
-   ASSERT( report, group && strcmp( group, "239.0.0.66" ) == 0, true );
-   ASSERT( report, port == 2416                               , true );
-   ASSERT( report, utils_cli_delete( &options )               , true );
+      "port" , utils_cli_USHORT, false, "2416", &port, NULL ));
+   ASSERT( report, group && strcmp( group, "239.0.0.66" ) == 0 );
+   ASSERT( report, port == 2416 );
+   ASSERT( report, utils_cli_delete( &options ));
 }
