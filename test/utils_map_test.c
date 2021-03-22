@@ -42,6 +42,13 @@ void utils_map_test( struct tests_report * report ) {
    bool         own             = false;
    char *       data            = NULL;
    utils_map    map;
+   utils_map    src;
+   ASSERT( report, utils_map_new     ( &src, name_compare ));
+   ASSERT( report, utils_map_put     ( src, "Eve"   , aubin_birthday  ));
+   ASSERT( report, utils_map_put     ( src, "Eve"   , eve_birthday    ));
+   ASSERT( report, utils_map_put     ( src, "Aubin" , aubin_birthday  ));
+   ASSERT( report, utils_map_size    ( src, &card ));
+   ASSERT( report, card == 2 );
    ASSERT( report, utils_map_new     ( &map, name_compare ));
    ASSERT( report, utils_map_size    ( map, &card ));
    ASSERT( report, card == 0 );
@@ -50,8 +57,7 @@ void utils_map_test( struct tests_report * report ) {
    ASSERT( report, utils_map_get     ( map, "Muriel", (void *)&data ) == false );
    ASSERT( report, data == NULL );
    ASSERT( report, utils_map_put     ( map, "Muriel", muriel_birthday ));
-   ASSERT( report, utils_map_put     ( map, "Eve"   , eve_birthday    ));
-   ASSERT( report, utils_map_put     ( map, "Aubin" , aubin_birthday  ));
+   ASSERT( report, utils_map_merge   ( map, src ));
    ASSERT( report, utils_map_size    ( map, &card ));
    ASSERT( report, card == 3 );
    ASSERT( report, utils_map_contains( map, "Aubin" , &own ));

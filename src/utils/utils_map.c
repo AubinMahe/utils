@@ -42,16 +42,37 @@ bool utils_map_put( utils_map map, const void * key, const void * value ) {
       return false;
    }
    utils_map_private * This = (utils_map_private *)map;
-   pair * data = realloc( This->data, ( This->count + 1 ) * sizeof( pair ));
-   if( data == NULL ) {
-      perror( "realloc" );
+   pair   kvp = { key, NULL };
+   pair * res = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
+   if( res == NULL ) {
+      pair * data = realloc( This->data, ( This->count + 1 ) * sizeof( pair ));
+      if( data == NULL ) {
+         perror( "realloc" );
+         return false;
+      }
+      This->data = data;
+      This->data[This->count].key   = key;
+      This->data[This->count].value = value;
+      This->count++;
+      qsort( This->data, This->count, sizeof( pair ), This->comparator );
+   }
+   else {
+      res->value = value;
+   }
+   return true;
+}
+
+bool utils_map_merge( utils_map map, utils_map src ) {
+   if(( map == NULL )||( src == NULL )) {
       return false;
    }
-   This->data = data;
-   This->data[This->count].key   = key;
-   This->data[This->count].value = value;
-   This->count++;
-   qsort( This->data, This->count, sizeof( pair ), This->comparator );
+   utils_map_private * Src = (utils_map_private *)src;
+   for( unsigned i = 0; i < Src->count; ++i ) {
+      const pair * p = Src->data + i;
+      if( ! utils_map_put( map, p->key, p->value )) {
+         return false;
+      }
+   }
    return true;
 }
 

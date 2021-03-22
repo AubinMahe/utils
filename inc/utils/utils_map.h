@@ -16,6 +16,7 @@ typedef bool (* utils_map_iterator)( size_t index, const void * key, const void 
 
 DLL_PUBLIC bool utils_map_new     ( utils_map * map, utils_comparator comparator );
 DLL_PUBLIC bool utils_map_put     ( utils_map   map, const void * key, const void * value );
+DLL_PUBLIC bool utils_map_merge   ( utils_map   map, utils_map src );
 DLL_PUBLIC bool utils_map_remove  ( utils_map   map, const void * key, bool free_key_and_value );
 DLL_PUBLIC bool utils_map_get     ( utils_map   map, const void * key, void ** value );
 DLL_PUBLIC bool utils_map_contains( utils_map   map, const void * data, bool * result );
