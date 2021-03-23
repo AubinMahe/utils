@@ -4,6 +4,10 @@
 
 #include <utils/utils_visibility.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
    utils_cli_STRING,
    utils_cli_USHORT,
@@ -19,3 +23,7 @@ typedef struct utils_cli_arg_s {
 
 DLL_PUBLIC bool utils_cli_new   ( utils_cli_arg * options, int argc, char * argv[], ... );
 DLL_PUBLIC bool utils_cli_delete( utils_cli_arg * options );
+
+#ifdef __cplusplus
+}
+#endif

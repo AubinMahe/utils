@@ -8,7 +8,8 @@ SRCS =\
  src/utils/utils_cli.c\
  src/utils/utils_map.c\
  src/utils/utils_prefs.c\
- src/utils/utils_set.c
+ src/utils/utils_set.c\
+ src/utils/utils_time.c
 
 SRCS_TST =\
  test/main.c\
@@ -17,7 +18,8 @@ SRCS_TST =\
  test/utils_cli_test.c\
  test/utils_map_test.c\
  test/utils_prefs_test.c\
- test/utils_set_test.c
+ test/utils_set_test.c\
+ test/utils_time_test.c
 
 OBJS         = $(SRCS:%c=BUILD/%o)
 OBJS_DBG     = $(SRCS:%c=BUILD/DEBUG/%o)

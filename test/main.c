@@ -9,5 +9,6 @@ int main( int argc, char * argv[] ) {
       "utils_map"  , utils_map_test,
       "utils_prefs", utils_prefs_test,
       "utils_set"  , utils_set_test,
+      "utils_time" , utils_time_test,
       NULL );
 }
