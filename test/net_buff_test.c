@@ -3,26 +3,34 @@
 #include "all_tests.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 void net_buff_test( struct tests_report * report ) {
    tests_chapter( report, "Encoding to and decoding from the network" );
-   net_buff nb       = NULL;
-   size_t   capacity = 0U;
-   size_t   limit    = 0U;
-   size_t   position = 0U;
-   bool     boolean_value;
-   byte     byte_value;
-   int8_t   int8_value;
-   uint16_t uint16_value;
-   int16_t  int16_value;
-   uint32_t uint32_value;
-   int32_t  int32_value;
-   uint64_t uint64_value;
-   int64_t  int64_value;
-   float    float_value;
-   double   double_value;
-   char     string_value[80];
+   net_buff     nb       = NULL;
+   size_t       capacity = 0U;
+   size_t       limit    = 0U;
+   size_t       position = 0U;
+   bool         boolean_value;
+   byte         byte_value;
+   int8_t       int8_value;
+   uint16_t     uint16_value;
+   int16_t      int16_value;
+   uint32_t     uint32_value;
+   int32_t      int32_value;
+   uint64_t     uint64_value;
+   int64_t      int64_value;
+   float        float_value;
+   double       double_value;
+   char         string_value[80];
+   char         hex_dump[5*80] = "";
+   const char * expected_dump =
+      "00000000  01 00 FF 80 7F FF FF 80  00 7F FF FF FF FF FF 80  |................|\n"
+      "00000010  00 00 00 7F FF FF FF FF  FF FF FF FF FF FF FF 80  |................|\n"
+      "00000020  00 00 00 00 00 00 00 7F  FF FF FF FF FF FF FF 46  |...............F|\n"
+      "00000030  40 E6 B7 40 C8 1C D6 E6  31 F8 A1 00 00 00 0D 48  |@..@....1......H|\n"
+      "00000040  65 6C 6C 6F 2C 20 77 6F  72 6C 64 21              |ello,.world!    |\n";
    ASSERT( report, net_buff_new( &nb, 1000 ));
    ASSERT( report, net_buff_get_capacity( nb, &capacity ));
    ASSERT( report, 1000 == capacity );
@@ -48,6 +56,8 @@ void net_buff_test( struct tests_report * report ) {
    ASSERT( report, net_buff_encode_double ( nb,      12345.6789 ));
    ASSERT( report, net_buff_encode_string ( nb, "Hello, world!" ));
    ASSERT( report, net_buff_flip( nb ));
+   ASSERT( report, net_buff_dump( nb, hex_dump, sizeof( hex_dump )));
+   ASSERT( report, 0 == strcmp( expected_dump, hex_dump ));
    ASSERT( report, net_buff_decode_boolean( nb, &boolean_value ));
    ASSERT( report,             true  == boolean_value );
    ASSERT( report, net_buff_decode_boolean( nb, &boolean_value ));

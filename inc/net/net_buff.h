@@ -19,6 +19,7 @@ DLL_PUBLIC bool net_buff_new           ( net_buff * nb, size_t   capacity );
 DLL_PUBLIC bool net_buff_get_capacity  ( net_buff   nb, size_t * capacity );
 DLL_PUBLIC bool net_buff_get_limit     ( net_buff   nb, size_t * limit );
 DLL_PUBLIC bool net_buff_get_position  ( net_buff   nb, size_t * position );
+DLL_PUBLIC bool net_buff_dump          ( net_buff   nb, char * dest, size_t dest_size );
 DLL_PUBLIC bool net_buff_clear         ( net_buff   nb );
 DLL_PUBLIC bool net_buff_encode_boolean( net_buff   nb, bool         src );
 DLL_PUBLIC bool net_buff_encode_byte   ( net_buff   nb, byte         src );

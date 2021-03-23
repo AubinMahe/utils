@@ -67,6 +67,59 @@ bool net_buff_get_position( net_buff nb, size_t * position ) {
    return true;
 }
 
+bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
+   if(( nb == NULL )||( dest == NULL )) {
+      return false;
+   }
+   net_buff_private * This = (net_buff_private *)nb;
+   if( This->buffer == NULL ) {
+      *dest= '\0';
+      return true;
+   }
+   memset( dest, 0, dest_size );
+   // 00005b20  00 00 00 00 00 00 00 00  01 00 00 00 00 00 00 00  |................|
+   // 012345678901234567890123456789012345678901234567890123456789012345678901234567
+   //          10        20        30        40        50        60        70
+   size_t hi = 0, ti = 0;
+   for( size_t i = 0; i < This->limit; ++i, hi += 3, ++ti ) {
+      if( ti >= dest_size ) {
+         return false;
+      }
+      if(( i % 16 ) == 0 ) {
+         if( i > 0 ) {
+            size_t pai = 79 * (i-16)/16;
+            dest[pai+59] = ' ';
+            dest[pai+77] = '|';
+         }
+         size_t ai = 79 * i/16;
+         sprintf( dest+ai, "%08lX ", i );
+         dest[ai+59] = ' ';
+         dest[ai+60] = '|';
+         dest[ai+77] = '|';
+         dest[ai+78] = '\n';
+         hi = ai +  9;
+         ti = ai + 61;
+      }
+      else if(( i % 8 ) == 0 ) {
+         dest[hi++] = ' ';
+      }
+      byte c = This->buffer[i];
+      sprintf( dest+hi, " %02X", c );
+      dest[hi+3] = ' ';
+      dest[ti]   = (( c <= 32 )||( c >= 127 )) ? '.' : (char)c;
+   }
+   for( size_t i = This->limit % 16; i < 16; ++i ) {
+      if(( i % 8 ) == 0 ) {
+         dest[++hi] = ' ';
+      }
+      dest[++hi] = ' ';
+      dest[++hi] = ' ';
+      dest[++hi] = ' ';
+      dest[ti++] = ' ';
+   }
+   return true;
+}
+
 bool net_buff_clear( net_buff nb ) {
    if( nb == NULL ) {
       return false;
