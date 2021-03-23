@@ -134,12 +134,12 @@ bool utils_map_contains( utils_map map, const void * key, bool * result ) {
    return true;
 }
 
-bool utils_map_size( utils_map map, size_t * size ) {
-   if(( map == NULL )||( size == NULL )) {
+bool utils_map_get_size( utils_map map, size_t * cardinality ) {
+   if(( map == NULL )||( cardinality == NULL )) {
       return false;
    }
    utils_map_private * This = (utils_map_private *)map;
-   *size = This->count;
+   *cardinality = This->count;
    return true;
 }
 

@@ -101,7 +101,7 @@ bool utils_set_contains( utils_set set, const void * value, bool * result ) {
    return true;
 }
 
-bool utils_set_size( utils_set set, size_t * cardinality ) {
+bool utils_get_size( utils_set set, size_t * cardinality ) {
    if(( set == NULL )||( cardinality == NULL )) {
       return false;
    }
