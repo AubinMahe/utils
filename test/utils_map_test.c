@@ -39,7 +39,7 @@ void utils_map_test( struct tests_report * report ) {
    const char * muriel_birthday = "26/01/1973";
    const char * aubin_birthday  = "24/01/1966";
    utils_map src;
-   ASSERT( report, utils_map_new( &src, name_compare ));
+   ASSERT( report, utils_map_new( &src, name_compare, false, false ));
    ASSERT( report, utils_map_put( src, "Muriel", muriel_birthday ));
    ASSERT( report, utils_map_put( src, "Eve"   , aubin_birthday  ));
    ASSERT( report, utils_map_put( src, "Eve"   , eve_birthday    ));
@@ -48,7 +48,7 @@ void utils_map_test( struct tests_report * report ) {
    ASSERT( report, utils_map_get_size( src, &card ));
    ASSERT( report, card == 3 );
    utils_map map;
-   ASSERT( report, utils_map_new( &map, name_compare ));
+   ASSERT( report, utils_map_new( &map, name_compare, false, false ));
    ASSERT( report, utils_map_get_size( map, &card ));
    ASSERT( report, card == 0 );
    bool own = false;
@@ -71,7 +71,7 @@ void utils_map_test( struct tests_report * report ) {
    ASSERT( report, own == false );
    ASSERT( report, utils_map_get     ( map, "Muriel", (void *)&data ));
    ASSERT( report, data &&( 0 == strcmp( data, muriel_birthday )));
-   ASSERT( report, utils_map_remove  ( map, "Eve"   , false ));
+   ASSERT( report, utils_map_remove  ( map, "Eve" ));
    ASSERT( report, utils_map_contains( map, "Eve"   , &own ));
    ASSERT( report, own == false );
    ASSERT( report, utils_map_get_size( map, &card ));
@@ -82,12 +82,12 @@ void utils_map_test( struct tests_report * report ) {
    ASSERT( report, utils_map_get_size( map, &card ));
    ASSERT( report, card == 3 );
    ASSERT( report, utils_map_foreach ( map, for_each, report ));
-   ASSERT( report, utils_map_remove  ( map, "Toto", false ) == false );
+   ASSERT( report, utils_map_remove  ( map, "Toto" ) == false );
    ASSERT( report, utils_map_get_size( map, &card ));
    ASSERT( report, card == 3 );
-   ASSERT( report, utils_map_remove  ( map, "Albert", false ) == false );
-   ASSERT( report, utils_map_remove  ( map, "Muriel", false ));
-   ASSERT( report, utils_map_clear   ( map, false ));
+   ASSERT( report, utils_map_remove  ( map, "Albert" ) == false );
+   ASSERT( report, utils_map_remove  ( map, "Muriel" ));
+   ASSERT( report, utils_map_clear   ( map ));
    ASSERT( report, utils_map_contains( map, "Aubin" , &own ));
    ASSERT( report, own == false );
    ASSERT( report, utils_map_contains( map, "Muriel", &own ));
@@ -98,6 +98,6 @@ void utils_map_test( struct tests_report * report ) {
    ASSERT( report, own == false );
    ASSERT( report, utils_map_get_size( map, &card ));
    ASSERT( report, card == 0 );
-   ASSERT( report, utils_map_delete  ( &map, false ));
-   ASSERT( report, utils_map_delete  ( &src, false ));
+   ASSERT( report, utils_map_delete  ( &map ));
+   ASSERT( report, utils_map_delete  ( &src ));
 }

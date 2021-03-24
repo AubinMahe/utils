@@ -17,11 +17,13 @@ typedef struct {
 
 typedef struct {
    utils_comparator comparator;
+   bool             must_free_keys;
+   bool             must_free_values;
    size_t           count;
    pair *           data;
 } utils_map_private;
 
-bool utils_map_new( utils_map * map, utils_comparator comparator ) {
+bool utils_map_new( utils_map * map, utils_comparator comparator, bool must_free_keys, bool must_free_values ) {
    if( map == NULL ) {
       return false;
    }
@@ -31,9 +33,11 @@ bool utils_map_new( utils_map * map, utils_comparator comparator ) {
       return false;
    }
    *map = (utils_map)This;
-   This->comparator = comparator;
-   This->count      = 0;
-   This->data       = NULL;
+   This->comparator       = comparator;
+   This->must_free_keys   = must_free_keys;
+   This->must_free_values = must_free_values;
+   This->count            = 0;
+   This->data             = NULL;
    return true;
 }
 
@@ -57,6 +61,13 @@ bool utils_map_put( utils_map map, const void * key, const void * value ) {
       qsort( This->data, This->count, sizeof( pair ), This->comparator );
    }
    else {
+      if( This->must_free_keys ) {
+         free( CONST_CAST( res->key ));
+      }
+      if( This->must_free_values ) {
+         free( CONST_CAST( res->value ));
+      }
+      res->key   = key;
       res->value = value;
    }
    return true;
@@ -67,16 +78,19 @@ bool utils_map_merge( utils_map map, utils_map src ) {
       return false;
    }
    utils_map_private * Src = (utils_map_private *)src;
-   for( unsigned i = 0; i < Src->count; ++i ) {
-      const pair * p = Src->data + i;
+   for( size_t i = 0; i < Src->count; ++i ) {
+      pair * p = Src->data + i;
       if( ! utils_map_put( map, p->key, p->value )) {
          return false;
       }
+      p->key   = NULL;
+      p->value = NULL;
    }
+   utils_map_clear( src );
    return true;
 }
 
-bool utils_map_remove( utils_map map, const void * key, bool free_key_and_value ) {
+bool utils_map_remove( utils_map map, const void * key ) {
    if(( map == NULL )||( key == NULL )) {
       return false;
    }
@@ -87,12 +101,11 @@ bool utils_map_remove( utils_map map, const void * key, bool free_key_and_value 
    pair   kvp = { key, NULL };
    pair * res = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
    if( res ) {
-      if( free_key_and_value ) {
-         pair * p = (pair *)res;
-         // Astuce pour libérer un pointeur const void * en espérant qu'il ne soit pas "vraiment" const,
-         // sinon c'est SIGSEGV !
-         // Ne fonctionne que si les pointeurs sont stockables sur 64 bits
+      pair * p = (pair *)res;
+      if( This->must_free_keys ) {
          free( CONST_CAST( p->key ));
+      }
+      if( This->must_free_values ) {
          free( CONST_CAST( p->value ));
       }
       ssize_t index = res - This->data;
@@ -156,14 +169,16 @@ bool utils_map_foreach( utils_map map, utils_map_iterator iter, void * user_cont
    return true;
 }
 
-bool utils_map_clear( utils_map map, bool free_key_and_value ) {
+bool utils_map_clear( utils_map map ) {
    if( map == NULL ) {
       return false;
    }
    utils_map_private * This = (utils_map_private *)map;
    for( size_t i = 0; i < This->count; ++i ) {
-      if( free_key_and_value ) {
+      if( This->must_free_keys && This->data[i].key ) {
          free( CONST_CAST( This->data[i].key ));
+      }
+      if( This->must_free_values && This->data[i].value ) {
          free( CONST_CAST( This->data[i].value ));
       }
    }
@@ -173,8 +188,8 @@ bool utils_map_clear( utils_map map, bool free_key_and_value ) {
    return true;
 }
 
-bool utils_map_delete( utils_map * map, bool free_key_and_value ) {
-   if( map && utils_map_clear( *map, free_key_and_value )) {
+bool utils_map_delete( utils_map * map ) {
+   if( map && utils_map_clear( *map )) {
       utils_map_private * This = (utils_map_private *)*map;
       free( This->data );
       free( This );

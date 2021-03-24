@@ -50,7 +50,7 @@ bool utils_prefs_load( utils_prefs * prefs, const char * program_name ) {
    if( chatrc == NULL ) {
       return false;
    }
-   if( ! utils_map_new( &This->map, property_name_compare )) {
+   if( ! utils_map_new( &This->map, property_name_compare, true, true )) {
       return false;
    }
    char buffer[2000];
@@ -61,7 +61,7 @@ bool utils_prefs_load( utils_prefs * prefs, const char * program_name ) {
       while( isspace( *prop_name )) {
          ++prop_name;
       }
-      if( *prop_name == '#' ) {
+      if(( *prop_name == '#' )||( *prop_name == '\0' )) {
          continue;
       }
       char *  equal  = strchr( prop_name, '=' );
@@ -78,6 +78,7 @@ bool utils_prefs_load( utils_prefs * prefs, const char * program_name ) {
       }
       if( sep - prop_name < 0 ) {
          fprintf( stderr, "%s: utils_prefs file syntax error at line %d\n", This->rcpath, line );
+         fclose( chatrc );
          return false;
       }
       *sep = '\0';
@@ -88,7 +89,9 @@ bool utils_prefs_load( utils_prefs * prefs, const char * program_name ) {
          while( isspace( *--end ));
          *++end = '\0';
       }
-      utils_map_put( This->map, strdup( prop_name ), strdup( sep ));
+      char * key   = strdup( prop_name );
+      char * value = strdup( sep );
+      utils_map_put( This->map, key, value );
    }
    fclose( chatrc );
    return true;
@@ -173,7 +176,7 @@ bool utils_prefs_delete( utils_prefs * prefs ) {
    }
    utils_prefs_private * This = (utils_prefs_private *)*prefs;
    if( This->map ) {
-      utils_map_delete( &This->map, true );
+      utils_map_delete( &This->map );
    }
    free( This );
    *prefs = NULL;

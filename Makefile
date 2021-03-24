@@ -43,7 +43,11 @@ validate: tests-d
 
 .PHONY: validate-valgrind
 validate-valgrind: tests-d
-	LD_LIBRARY_PATH=. valgrind --leak-check=full --show-leak-kinds=all ./tests-d
+	LD_LIBRARY_PATH=. valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tests-d
+
+.PHONY: map
+map: tests-d
+	LD_LIBRARY_PATH=. valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tests-d utils_map
 
 .PHONY: clean
 clean:
