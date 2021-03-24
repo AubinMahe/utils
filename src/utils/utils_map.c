@@ -190,9 +190,7 @@ bool utils_map_clear( utils_map map ) {
 
 bool utils_map_delete( utils_map * map ) {
    if( map && utils_map_clear( *map )) {
-      utils_map_private * This = (utils_map_private *)*map;
-      free( This->data );
-      free( This );
+      free( *map );
       *map = NULL;
       return true;
    }
