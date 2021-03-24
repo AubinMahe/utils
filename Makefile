@@ -27,6 +27,14 @@ OBJS_DBG_TST = $(SRCS_TST:%c=BUILD/DEBUG/%o)
 DEPS         = $(SRCS:%c=BUILD/%d)
 DEPS_TST     = $(SRCS_TST:%c=BUILD/%d)
 
+VALGRIND_OPTIONS =\
+ --leak-check=full\
+ --show-leak-kinds=all\
+ --track-origins=yes\
+ --track-fds=yes\
+ --error-exitcode=2\
+ --expensive-definedness-checks=yes
+
 .PHONY: all
 all: libutils-d.so libutils.so tests-d
 
@@ -42,12 +50,12 @@ validate: tests-d
 	@LD_LIBRARY_PATH=. ./tests-d
 
 .PHONY: validate-valgrind
-validate-valgrind: tests-d
-	LD_LIBRARY_PATH=. valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tests-d
+memcheck: tests-d
+	LD_LIBRARY_PATH=. valgrind $(VALGRIND_OPTIONS) ./tests-d
 
 .PHONY: map
 map: tests-d
-	LD_LIBRARY_PATH=. valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./tests-d utils_map
+	LD_LIBRARY_PATH=. valgrind $(VALGRIND_OPTIONS) ./tests-d utils_map
 
 .PHONY: clean
 clean:

@@ -19,6 +19,7 @@ typedef struct {
    utils_comparator comparator;
    bool             must_free_keys;
    bool             must_free_values;
+   int              trace_flags;
    size_t           count;
    pair *           data;
 } utils_map_private;
@@ -36,8 +37,18 @@ bool utils_map_new( utils_map * map, utils_comparator comparator, bool must_free
    This->comparator       = comparator;
    This->must_free_keys   = must_free_keys;
    This->must_free_values = must_free_values;
+   This->trace_flags      = 0;
    This->count            = 0;
    This->data             = NULL;
+   return true;
+}
+
+bool utils_map_set_trace( utils_map map, int flags ) {
+   if( map == NULL ) {
+      return false;
+   }
+   utils_map_private * This = (utils_map_private *)map;
+   This->trace_flags = flags;
    return true;
 }
 
@@ -54,6 +65,9 @@ bool utils_map_put( utils_map map, const void * key, const void * value ) {
          perror( "realloc" );
          return false;
       }
+      if( This->trace_flags & UTILS_MAP_TRACE_ALLOC ) {
+         fprintf( stderr, "%s: This->data = %p realloc to %p\n", __func__, (const void *)This->data, (const void *)data );
+      }
       This->data = data;
       This->data[This->count].key   = key;
       This->data[This->count].value = value;
@@ -62,13 +76,22 @@ bool utils_map_put( utils_map map, const void * key, const void * value ) {
    }
    else {
       if( This->must_free_keys ) {
+		   if( This->trace_flags & UTILS_MAP_TRACE_FREE ) {
+		      fprintf( stderr, "%s: free( key = %p )\n", __func__, (const void *)res->key );
+		   }
          free( CONST_CAST( res->key ));
       }
       if( This->must_free_values ) {
+		   if( This->trace_flags & UTILS_MAP_TRACE_FREE ) {
+		      fprintf( stderr, "%s: free( value = %p )\n", __func__, (const void *)res->value );
+		   }
          free( CONST_CAST( res->value ));
       }
       res->key   = key;
       res->value = value;
+   }
+   if( This->trace_flags & UTILS_MAP_TRACE_PUT ) {
+      fprintf( stderr, "%s: count = %ld, pair {%p, %p} added\n", __func__, This->count, (const void *)key, (const void *)value );
    }
    return true;
 }
@@ -101,15 +124,23 @@ bool utils_map_remove( utils_map map, const void * key ) {
    pair   kvp = { key, NULL };
    pair * res = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
    if( res ) {
-      pair * p = (pair *)res;
       if( This->must_free_keys ) {
-         free( CONST_CAST( p->key ));
+		   if( This->trace_flags & UTILS_MAP_TRACE_FREE ) {
+		      fprintf( stderr, "%s: free( key = %p )\n", __func__, (const void *)res->key );
+		   }
+         free( CONST_CAST( res->key ));
       }
       if( This->must_free_values ) {
-         free( CONST_CAST( p->value ));
+		   if( This->trace_flags & UTILS_MAP_TRACE_FREE ) {
+		      fprintf( stderr, "%s: free( value = %p )\n", __func__, (const void *)res->value );
+		   }
+         free( CONST_CAST( res->value ));
       }
       ssize_t index = res - This->data;
       --This->count;
+      if( This->trace_flags & UTILS_MAP_TRACE_REMOVE ) {
+         fprintf( stderr, "%s: count = %ld, pair {%p, %p} removed\n", __func__, This->count, res->key, res->value );
+      }
       memmove( res, res + 1, ( This->count - (size_t)index ) * sizeof( pair ));
       return true;
    }
@@ -175,12 +206,22 @@ bool utils_map_clear( utils_map map ) {
    }
    utils_map_private * This = (utils_map_private *)map;
    for( size_t i = 0; i < This->count; ++i ) {
-      if( This->must_free_keys && This->data[i].key ) {
-         free( CONST_CAST( This->data[i].key ));
+      pair * res = This->data + i;
+      if( This->must_free_keys ) {
+		   if( This->trace_flags & UTILS_MAP_TRACE_FREE ) {
+		      fprintf( stderr, "%s: free( key = %p )\n", __func__, (const void *)res->key );
+		   }
+         free( CONST_CAST( res->key ));
       }
-      if( This->must_free_values && This->data[i].value ) {
-         free( CONST_CAST( This->data[i].value ));
+      if( This->must_free_values ) {
+		   if( This->trace_flags & UTILS_MAP_TRACE_FREE ) {
+		      fprintf( stderr, "%s: free( value = %p )\n", __func__, (const void *)res->value );
+		   }
+         free( CONST_CAST( res->value ));
       }
+   }
+   if( This->trace_flags & UTILS_MAP_TRACE_CLEAR ) {
+      fprintf( stderr, "%s: %ld entr%s removed\n", __func__, This->count, ( This->count > 1 ) ? "ies" : "y" );
    }
    free( This->data );
    This->data  = NULL;
