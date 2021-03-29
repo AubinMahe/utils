@@ -49,7 +49,7 @@ validate: tests-d
 	@rm cplusplus_ckeck.o
 	@LD_LIBRARY_PATH=. ./tests-d
 
-.PHONY: validate-valgrind
+.PHONY: memcheck
 memcheck: tests-d
 	LD_LIBRARY_PATH=. valgrind $(VALGRIND_OPTIONS) ./tests-d
 

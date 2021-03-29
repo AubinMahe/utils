@@ -16,10 +16,12 @@ static bool byte_order_is_little = true;
 
 bool net_buff_new( net_buff * nb, size_t capacity ) {
    byte_order_is_little = ( htonl(1) != 1 );
-   if( nb == NULL ) {
+   if(( nb == NULL )||( capacity == 0 )) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
-   if( capacity == 0 ) {
+   if( *nb ) {
+      fprintf( stderr, "%s: *nb must be null \n", __func__ );
       return false;
    }
    net_buff_private * This = malloc( sizeof( net_buff_private ));
@@ -32,10 +34,8 @@ bool net_buff_new( net_buff * nb, size_t capacity ) {
 }
 
 bool net_buff_get_capacity( net_buff nb, size_t * capacity ) {
-   if( nb == NULL ) {
-      return false;
-   }
-   if( capacity == NULL ) {
+   if(( nb == NULL )||( capacity == 0 )) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
@@ -56,10 +56,8 @@ bool net_buff_get_limit( net_buff nb, size_t * limit ) {
 }
 
 bool net_buff_get_position( net_buff nb, size_t * position ) {
-   if( nb == NULL ) {
-      return false;
-   }
-   if( position == NULL ) {
+   if(( nb == NULL )||( position == 0 )) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
@@ -68,15 +66,16 @@ bool net_buff_get_position( net_buff nb, size_t * position ) {
 }
 
 bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
-   if(( nb == NULL )||( dest == NULL )) {
+   if(( nb == NULL )||( dest == NULL )||( dest_size == 0 )) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
+   memset( dest, 0, dest_size );
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      *dest= '\0';
-      return true;
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
+      return false;
    }
-   memset( dest, 0, dest_size );
    // 00005b20  00 00 00 00 00 00 00 00  01 00 00 00 00 00 00 00  |................|
    // 012345678901234567890123456789012345678901234567890123456789012345678901234567
    //          10        20        30        40        50        60        70
@@ -122,6 +121,7 @@ bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
 
 bool net_buff_clear( net_buff nb ) {
    if( nb == NULL ) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
@@ -135,13 +135,16 @@ bool net_buff_clear( net_buff nb ) {
 
 bool net_buff_encode_boolean( net_buff nb, bool value ) {
    if( nb == NULL ) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
    if( This->position + 1 > This->limit ) {
+      fprintf( stderr, "%s: overflow\n", __func__ );
       return false;
    }
    This->buffer[This->position] = value ? 1 : 0;
@@ -151,13 +154,16 @@ bool net_buff_encode_boolean( net_buff nb, bool value ) {
 
 bool net_buff_encode_byte( net_buff nb, byte value ) {
    if( nb == NULL ) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
    if( This->position + sizeof( value ) > This->limit ) {
+      fprintf( stderr, "%s: overflow\n", __func__ );
       return false;
    }
    This->buffer[This->position] = value;
@@ -171,13 +177,16 @@ bool net_buff_encode_int8( net_buff nb, int8_t value ) {
 
 bool net_buff_encode_uint16( net_buff nb, uint16_t value ) {
    if( nb == NULL ) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
    if( This->position + sizeof( value ) > This->limit ) {
+      fprintf( stderr, "%s: overflow\n", __func__ );
       return false;
    }
    uint16_t encoded_value = htons( value );
@@ -192,13 +201,16 @@ bool net_buff_encode_int16( net_buff nb, int16_t value ) {
 
 bool net_buff_encode_uint32( net_buff nb, uint32_t value ) {
    if( nb == NULL ) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
    if( This->position + sizeof( value ) > This->limit ) {
+      fprintf( stderr, "%s: overflow\n", __func__ );
       return false;
    }
    uint32_t encoded_value = htonl( value );
@@ -213,13 +225,16 @@ bool net_buff_encode_int32( net_buff nb, int32_t value ) {
 
 bool net_buff_encode_uint64( net_buff nb, uint64_t value ) {
    if( nb == NULL ) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
    if( This->position + sizeof( value ) > This->limit ) {
+      fprintf( stderr, "%s: overflow\n", __func__ );
       return false;
    }
    if( byte_order_is_little ) {
@@ -253,20 +268,24 @@ bool net_buff_encode_double( net_buff nb, double src ) {
 
 bool net_buff_encode_string( net_buff nb, const char * string ) {
    if( nb == NULL ) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
    size_t length = strlen( string );
    uint32_t encoded_length = htonl((uint32_t)length );
    if( This->position + sizeof( encoded_length ) > This->limit ) {
+      fprintf( stderr, "%s: overflow\n", __func__ );
       return false;
    }
    memcpy( This->buffer + This->position, &encoded_length, sizeof( encoded_length ));
    This->position += sizeof( encoded_length );
    if( This->position + length > This->limit ) {
+      fprintf( stderr, "%s: overflow\n", __func__ );
       return false;
    }
    memcpy( This->buffer + This->position, string, length );
@@ -280,6 +299,7 @@ bool net_buff_flip( net_buff nb ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
    This->limit = This->position;
@@ -296,6 +316,7 @@ bool net_buff_send( net_buff nb, int sckt, struct sockaddr_in * to ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
    size_t  length = This->limit - This->position;
@@ -308,6 +329,26 @@ bool net_buff_send( net_buff nb, int sckt, struct sockaddr_in * to ) {
    return false;
 }
 
+bool net_buff_wrap( net_buff * nb, byte * bytes, size_t capacity ) {
+   byte_order_is_little = ( htonl(1) != 1 );
+   if(( nb == NULL )||( bytes == NULL )||( capacity == 0 )) {
+      fprintf( stderr, "%s: null argument\n", __func__ );
+      return false;
+   }
+   if( *nb ) {
+      fprintf( stderr, "%s: *nb must be null \n", __func__ );
+      return false;
+   }
+   net_buff_private * This = malloc( sizeof( net_buff_private ));
+   memset( This, 0, sizeof( net_buff_private ));
+   This->buffer   = malloc( capacity );
+   This->capacity = capacity;
+   This->limit    = capacity;
+   memmove( This->buffer, bytes, capacity );
+   *nb = (net_buff)This;
+   return true;
+}
+
 bool net_buff_receive( net_buff nb, int sckt, struct sockaddr_in * from ) {
    if(( nb == NULL )||( from == NULL )) {
       fprintf( stderr, "%s: null argument\n", __func__ );
@@ -315,7 +356,7 @@ bool net_buff_receive( net_buff nb, int sckt, struct sockaddr_in * from ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: You must call net_buff_wrap first\n", __func__ );
+      fprintf( stderr, "%s: You must call net_buff_new or net_buff_wrap first\n", __func__ );
       return false;
    }
    socklen_t addrlen = sizeof( struct sockaddr_in );
@@ -335,9 +376,11 @@ bool net_buff_decode_boolean( net_buff nb, bool * dest ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
-   if( This->position >= This->limit ) {
+   if( This->position + 1 > This->limit ) {
+      fprintf( stderr, "%s: underflow\n", __func__ );
       return false;
    }
    *dest = This->buffer[This->position] != 0;
@@ -351,9 +394,11 @@ bool net_buff_decode_byte( net_buff nb, byte * dest ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
-   if( This->position >= This->limit ) {
+   if( This->position + sizeof( byte ) > This->limit ) {
+      fprintf( stderr, "%s: underflow\n", __func__ );
       return false;
    }
    *dest = This->buffer[This->position];
@@ -371,9 +416,11 @@ bool net_buff_decode_uint16( net_buff nb, uint16_t * dest ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
-   if( This->position >= This->limit ) {
+   if( This->position + sizeof( uint16_t ) > This->limit ) {
+      fprintf( stderr, "%s: underflow\n", __func__ );
       return false;
    }
    *dest = ntohs( *(uint16_t *)( This->buffer + This->position ));
@@ -391,9 +438,11 @@ bool net_buff_decode_uint32( net_buff nb, uint32_t * dest ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
-   if( This->position >= This->limit ) {
+   if( This->position + sizeof( uint32_t ) > This->limit ) {
+      fprintf( stderr, "%s: underflow\n", __func__ );
       return false;
    }
    *dest = ntohl( *(uint32_t *)( This->buffer + This->position ));
@@ -411,9 +460,11 @@ bool net_buff_decode_uint64( net_buff nb, uint64_t * dest ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
-   if( This->position >= This->limit ) {
+   if( This->position + sizeof( uint64_t ) > This->limit ) {
+      fprintf( stderr, "%s: underflow\n", __func__ );
       return false;
    }
    *dest = *(uint64_t *)( This->buffer + This->position );
@@ -449,17 +500,25 @@ bool net_buff_decode_string( net_buff nb, char * target, size_t target_size ) {
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
+      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
-   if( This->position >= This->limit ) {
+   if( This->position + sizeof( uint32_t ) > This->limit ) {
+      fprintf( stderr, "%s: underflow (length)\n", __func__ );
       return false;
    }
    uint32_t length = ntohl( *(uint32_t *)( This->buffer + This->position ));
-   if( This->position + sizeof( length ) > This->limit ) {
+   if( This->position + sizeof( length ) >= This->limit ) {
+      fprintf( stderr, "%s: underflow\n", __func__ );
+      return false;
+   }
+   if( This->position + length > This->limit ) {
+      fprintf( stderr, "%s: underflow (string length = %d)\n", __func__, length );
       return false;
    }
    This->position += sizeof( length );
    if( length >= target_size ) {
+      fprintf( stderr, "%s: too small target buffer, %d bytes needed\n", __func__, length+1 );
       return false;
    }
    strncpy( target, (char *)( This->buffer + This->position ), length );

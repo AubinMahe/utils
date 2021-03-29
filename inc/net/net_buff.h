@@ -36,6 +36,7 @@ DLL_PUBLIC bool net_buff_encode_string ( net_buff   nb, const char * src );
 DLL_PUBLIC bool net_buff_flip          ( net_buff   nb );
 DLL_PUBLIC bool net_buff_send          ( net_buff   nb, int sckt, struct sockaddr_in * to );
 DLL_PUBLIC bool net_buff_receive       ( net_buff   nb, int sckt, struct sockaddr_in * from );
+DLL_PUBLIC bool net_buff_wrap          ( net_buff * nb, byte * bytes, size_t capacity );
 DLL_PUBLIC bool net_buff_decode_boolean( net_buff   nb, bool *     dest );
 DLL_PUBLIC bool net_buff_decode_byte   ( net_buff   nb, byte *     dest );
 DLL_PUBLIC bool net_buff_decode_int8   ( net_buff   nb, int8_t *   dest );
