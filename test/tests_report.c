@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #define HEAVY_CHECK_MARK      "\u2714"
 #define HEAVY_BALLOT_X        "\u2718"
@@ -23,6 +24,7 @@ typedef struct tests_chapter_s {
 } tests_chapter_t;
 
 struct tests_report {
+   pthread_mutex_t   lock;
    tests_chapter_t * tests;
    unsigned          passed;
    unsigned          failed;
@@ -30,7 +32,7 @@ struct tests_report {
    unsigned          sum_failed;
 };
 
-const struct tests_report tests_Zero = { NULL, 0, 0, 0, 0 };
+const struct tests_report tests_Zero = { PTHREAD_MUTEX_INITIALIZER, NULL, 0, 0, 0, 0 };
 
 int tests_run( int argc, char * argv[], ... ) {
    struct tests_report This = tests_Zero;
@@ -86,6 +88,7 @@ int tests_run( int argc, char * argv[], ... ) {
 }
 
 void tests_chapter( struct tests_report * ctxt, const char * title ) {
+   pthread_mutex_lock( &ctxt->lock );
    if( ctxt->failed || ctxt->passed || ctxt->sum_failed || ctxt->sum_passed ) {
       ctxt->sum_failed += ctxt->failed;
       ctxt->sum_passed += ctxt->passed;
@@ -106,9 +109,11 @@ void tests_chapter( struct tests_report * ctxt, const char * title ) {
    if( title ) {
       printf( "\n%s%s%s\n\n", ISO_6429_BOLD, title, ISO_6429_RESET );
    }
+   pthread_mutex_unlock( &ctxt->lock );
 }
 
 void tests_assert( struct tests_report * ctxt, const char * test, bool test_result, const char * file, int line ) {
+   pthread_mutex_lock( &ctxt->lock );
    if( test_result ) {
       printf( "   %s %s\n", TEST_PASSED, test );
       ++(ctxt->passed);
@@ -117,10 +122,12 @@ void tests_assert( struct tests_report * ctxt, const char * test, bool test_resu
       printf( "   %s %s\t\t(%s:%d)\n", TEST_FAILED, test, file, line );
       ++(ctxt->failed);
    }
+   pthread_mutex_unlock( &ctxt->lock );
 }
 
 void tests_ended( struct tests_report * ctxt ) {
    tests_chapter( ctxt, NULL );
+   pthread_mutex_lock( &ctxt->lock );
    if( ctxt->sum_failed == 0 ) {
       printf( "\n%s%d tests, %sall successful%s\n", ISO_6429_BOLD, ctxt->sum_passed, ISO_6429_FG_GREEN, ISO_6429_RESET );
    }
@@ -132,4 +139,5 @@ void tests_ended( struct tests_report * ctxt ) {
          ISO_6429_FG_GREEN, ctxt->sum_passed, ISO_6429_RESET,
          ISO_6429_FG_RED  , ctxt->sum_failed, ISO_6429_RESET );
    }
+   pthread_mutex_unlock( &ctxt->lock );
 }
