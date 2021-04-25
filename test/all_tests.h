@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tests_report.h"
+#include <tst/tests_report.h>
 
 void net_buff_test   ( struct tests_report * report );
 void utils_cli_test  ( struct tests_report * report );

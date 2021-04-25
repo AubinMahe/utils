@@ -11,20 +11,15 @@
 #define CONST_CAST(p)      ((void *)(uint64_t)(p))
 
 typedef struct {
-   const void * key;
-   const void * value;
-} pair;
-
-typedef struct {
    utils_comparator comparator;
    bool             must_free_keys;
    bool             must_free_values;
    int              trace_flags;
    size_t           count;
-   pair *           data;
+   map_pair *       data;
 } utils_map_private;
 
-bool utils_map_new( utils_map * map, utils_comparator comparator, bool must_free_keys, bool must_free_values ) {
+DLL_PUBLIC bool utils_map_new( utils_map * map, utils_comparator comparator, bool must_free_keys, bool must_free_values ) {
    if( map == NULL ) {
       return false;
    }
@@ -43,7 +38,7 @@ bool utils_map_new( utils_map * map, utils_comparator comparator, bool must_free
    return true;
 }
 
-bool utils_map_set_trace( utils_map map, int flags ) {
+DLL_PUBLIC bool utils_map_set_trace( utils_map map, int flags ) {
    if( map == NULL ) {
       return false;
    }
@@ -52,15 +47,15 @@ bool utils_map_set_trace( utils_map map, int flags ) {
    return true;
 }
 
-bool utils_map_put( utils_map map, const void * key, const void * value ) {
+DLL_PUBLIC bool utils_map_put( utils_map map, map_key key, map_value value ) {
    if(( map == NULL )||( key == NULL )) {
       return false;
    }
    utils_map_private * This = (utils_map_private *)map;
-   pair   kvp = { key, NULL };
-   pair * res = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
+   map_pair   kvp  = { key, NULL };
+   map_pair * res  = bsearch( &kvp, This->data, This->count, sizeof( map_pair ), This->comparator );
    if( res == NULL ) {
-      pair * data = realloc( This->data, ( This->count + 1 ) * sizeof( pair ));
+      map_pair * data = realloc( This->data, ( This->count + 1 ) * sizeof( map_pair ));
       if( data == NULL ) {
          perror( "realloc" );
          return false;
@@ -72,7 +67,7 @@ bool utils_map_put( utils_map map, const void * key, const void * value ) {
       This->data[This->count].key   = key;
       This->data[This->count].value = value;
       This->count++;
-      qsort( This->data, This->count, sizeof( pair ), This->comparator );
+      qsort( This->data, This->count, sizeof( map_pair ), This->comparator );
    }
    else {
       if( This->must_free_keys ) {
@@ -91,18 +86,18 @@ bool utils_map_put( utils_map map, const void * key, const void * value ) {
       res->value = value;
    }
    if( This->trace_flags & UTILS_MAP_TRACE_PUT ) {
-      fprintf( stderr, "%s: count = %ld, pair {%p, %p} added\n", __func__, This->count, (const void *)key, (const void *)value );
+      fprintf( stderr, "%s: count = %ld, map_pair {%p, %p} added\n", __func__, This->count, (const void *)key, (const void *)value );
    }
    return true;
 }
 
-bool utils_map_merge( utils_map map, utils_map src ) {
+DLL_PUBLIC bool utils_map_merge( utils_map map, utils_map src ) {
    if(( map == NULL )||( src == NULL )) {
       return false;
    }
    utils_map_private * Src = (utils_map_private *)src;
    for( size_t i = 0; i < Src->count; ++i ) {
-      pair * p = Src->data + i;
+      map_pair * p = Src->data + i;
       if( ! utils_map_put( map, p->key, p->value )) {
          return false;
       }
@@ -113,7 +108,7 @@ bool utils_map_merge( utils_map map, utils_map src ) {
    return true;
 }
 
-bool utils_map_remove( utils_map map, const void * key ) {
+DLL_PUBLIC bool utils_map_remove( utils_map map, map_key key ) {
    if(( map == NULL )||( key == NULL )) {
       return false;
    }
@@ -121,8 +116,8 @@ bool utils_map_remove( utils_map map, const void * key ) {
    if( This->data == NULL ) {
       return false;
    }
-   pair   kvp = { key, NULL };
-   pair * res = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
+   map_pair   kvp = { key, NULL };
+   map_pair * res = bsearch( &kvp, This->data, This->count, sizeof( map_pair ), This->comparator );
    if( res ) {
       if( This->must_free_keys ) {
 		   if( This->trace_flags & UTILS_MAP_TRACE_FREE ) {
@@ -139,15 +134,15 @@ bool utils_map_remove( utils_map map, const void * key ) {
       ssize_t index = res - This->data;
       --This->count;
       if( This->trace_flags & UTILS_MAP_TRACE_REMOVE ) {
-         fprintf( stderr, "%s: count = %ld, pair {%p, %p} removed\n", __func__, This->count, res->key, res->value );
+         fprintf( stderr, "%s: count = %ld, map_pair {%p, %p} removed\n", __func__, This->count, res->key, res->value );
       }
-      memmove( res, res + 1, ( This->count - (size_t)index ) * sizeof( pair ));
+      memmove( res, res + 1, ( This->count - (size_t)index ) * sizeof( map_pair ));
       return true;
    }
    return false;
 }
 
-bool utils_map_get( utils_map map, const void * key, void ** value ) {
+DLL_PUBLIC bool utils_map_get( utils_map map, map_key key, map_value * value ) {
    if(( map == NULL )||( key == NULL )||( value == NULL )) {
       return false;
    }
@@ -155,30 +150,30 @@ bool utils_map_get( utils_map map, const void * key, void ** value ) {
    if( This->data == NULL ) {
       return false;
    }
-   pair   kvp = { key, NULL };
-   pair * p = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
+   map_pair   kvp = { key, NULL };
+   map_pair * p   = bsearch( &kvp, This->data, This->count, sizeof( map_pair ), This->comparator );
    if( p == NULL ) {
       return false;
    }
-   *value = CONST_CAST( p->value );
+   *value = p->value;
    return true;
 }
 
-bool utils_map_contains( utils_map map, const void * key, bool * result ) {
+DLL_PUBLIC bool utils_map_contains( utils_map map, map_key key, bool * result ) {
    if(( map == NULL )||( key == NULL )||( result == NULL )) {
       return false;
    }
    *result = false;
    utils_map_private * This = (utils_map_private *)map;
    if( This->data ) {
-      pair   kvp = { key, NULL };
-      pair * res = bsearch( &kvp, This->data, This->count, sizeof( pair ), This->comparator );
+      map_pair   kvp = { key, NULL };
+      map_pair * res = bsearch( &kvp, This->data, This->count, sizeof( map_pair ), This->comparator );
       *result = ( res != NULL );
    }
    return true;
 }
 
-bool utils_map_get_size( utils_map map, size_t * cardinality ) {
+DLL_PUBLIC bool utils_map_get_size( utils_map map, size_t * cardinality ) {
    if(( map == NULL )||( cardinality == NULL )) {
       return false;
    }
@@ -187,26 +182,71 @@ bool utils_map_get_size( utils_map map, size_t * cardinality ) {
    return true;
 }
 
-bool utils_map_foreach( utils_map map, utils_map_iterator iter, void * user_context ) {
+DLL_PUBLIC bool utils_map_get_keys( utils_map map, map_key keys[], size_t * keys_count ) {
+   if(( map == NULL )||( keys_count == NULL )) {
+      return false;
+   }
+   utils_map_private * This = (utils_map_private *)map;
+   if(( keys == NULL )||( *keys_count < This->count )) {
+      *keys_count = This->count;
+      return true;
+   }
+   for( size_t i = 0; i < This->count; ++i ) {
+      keys[i] = This->data[i].key;
+   }
+   return true;
+}
+
+DLL_PUBLIC bool utils_map_get_values( utils_map map, map_value values[], size_t * values_count ) {
+   if(( map == NULL )||( values_count == NULL )) {
+      return false;
+   }
+   utils_map_private * This = (utils_map_private *)map;
+   if(( values == NULL )||( *values_count < This->count )) {
+      *values_count = This->count;
+      return true;
+   }
+   for( size_t i = 0; i < This->count; ++i ) {
+      values[i] = This->data[i].value;
+   }
+   return true;
+}
+
+DLL_PUBLIC bool utils_map_get_entries( utils_map map, map_pair pairs[], size_t * pairs_count ) {
+   if(( map == NULL )||( pairs_count == NULL )) {
+      return false;
+   }
+   utils_map_private * This = (utils_map_private *)map;
+   if(( pairs == NULL )||( *pairs_count < This->count )) {
+      *pairs_count = This->count;
+      return true;
+   }
+   for( size_t i = 0; i < This->count; ++i ) {
+      pairs[i] = This->data[i];
+   }
+   return true;
+}
+
+DLL_PUBLIC bool utils_map_foreach( utils_map map, utils_map_iterator iter, void * user_context ) {
    if(( map == NULL )||( iter == NULL )) {
       return false;
    }
    utils_map_private * This = (utils_map_private *)map;
    for( size_t i = 0; i < This->count; ++i ) {
-      if( ! (*iter)( i, This->data[i].key, This->data[i].value, user_context )) {
+      if( ! (*iter)( i, This->data[i], user_context )) {
          break;
       }
    }
    return true;
 }
 
-bool utils_map_clear( utils_map map ) {
+DLL_PUBLIC bool utils_map_clear( utils_map map ) {
    if( map == NULL ) {
       return false;
    }
    utils_map_private * This = (utils_map_private *)map;
    for( size_t i = 0; i < This->count; ++i ) {
-      pair * res = This->data + i;
+      map_pair * res = This->data + i;
       if( This->must_free_keys ) {
 		   if( This->trace_flags & UTILS_MAP_TRACE_FREE ) {
 		      fprintf( stderr, "%s: free( key = %p )\n", __func__, (const void *)res->key );
@@ -229,7 +269,7 @@ bool utils_map_clear( utils_map map ) {
    return true;
 }
 
-bool utils_map_delete( utils_map * map ) {
+DLL_PUBLIC bool utils_map_delete( utils_map * map ) {
    if( map && utils_map_clear( *map )) {
       free( *map );
       *map = NULL;

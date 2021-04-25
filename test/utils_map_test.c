@@ -4,24 +4,24 @@
 
 #include <string.h>
 
-static bool for_each( size_t index, const void * key, const void * value, void * user_context ) {
+static bool for_each( size_t index, map_pair pair, void * user_context ) {
    struct tests_report * report = (struct tests_report *)user_context;
-   const bool unexpected_item = true;
+   const bool unexpected_item = false;
    switch( index ) {
    case 0 :
-      ASSERT( report, 0 == strcmp( key  , "Aubin" ));
-      ASSERT( report, 0 == strcmp( value, "24/01/1966" ));
+      ASSERT( report, 0 == strcmp( pair.key  , "Aubin" ));
+      ASSERT( report, 0 == strcmp( pair.value, "24/01/1966" ));
       return true;
    case 1 :
-      ASSERT( report, 0 == strcmp( key  , "Eve" ));
-      ASSERT( report, 0 == strcmp( value, "28/02/2008" ));
+      ASSERT( report, 0 == strcmp( pair.key  , "Eve" ));
+      ASSERT( report, 0 == strcmp( pair.value, "28/02/2008" ));
       return true;
    case 2 :
-      ASSERT( report, 0 == strcmp( key  , "Muriel" ));
-      ASSERT( report, 0 == strcmp( value, "26/01/1973" ));
+      ASSERT( report, 0 == strcmp( pair.key  , "Muriel" ));
+      ASSERT( report, 0 == strcmp( pair.value, "26/01/1973" ));
       return true;
    default:
-      ASSERT( report, unexpected_item == false );
+      ASSERT( report, unexpected_item );
       break;
    }
    return false;
@@ -82,6 +82,28 @@ void utils_map_test( struct tests_report * report ) {
    ASSERT( report, utils_map_get_size( map, &card ));
    ASSERT( report, card == 3 );
    ASSERT( report, utils_map_foreach ( map, for_each, report ));
+   map_key keys[3];
+   size_t count = sizeof( keys ) / sizeof( keys[0] );
+   bool ok = false;
+   ASSERT( report, ok = utils_map_get_keys( map, keys, &count ));
+   ASSERT( report, count == ( sizeof( keys ) / sizeof( keys[0] )));
+   ASSERT( report, ( count > 0 )&&( 0 == strcmp( keys[0], "Aubin"  )));
+   ASSERT( report, ( count > 1 )&&( 0 == strcmp( keys[1], "Eve"    )));
+   ASSERT( report, ( count > 2 )&&( 0 == strcmp( keys[2], "Muriel" )));
+   map_key values[3];
+   count = sizeof( values ) / sizeof( values[0] );
+   ASSERT( report, ok = utils_map_get_values( map, values, &count ));
+   ASSERT( report, count == ( sizeof( values ) / sizeof( values[0] )));
+   ASSERT( report, ( count > 0 )&&( 0 == strcmp( values[0], aubin_birthday  )));
+   ASSERT( report, ( count > 1 )&&( 0 == strcmp( values[1], eve_birthday    )));
+   ASSERT( report, ( count > 2 )&&( 0 == strcmp( values[2], muriel_birthday )));
+   map_pair pairs[3];
+   count = sizeof( pairs ) / sizeof( pairs[0] );
+   ASSERT( report, ok = utils_map_get_entries( map, pairs, &count ));
+   ASSERT( report, count == ( sizeof( pairs ) / sizeof( pairs[0] )));
+   ASSERT( report, ( count > 0 )&&( 0 == strcmp( pairs[0].value, aubin_birthday  )));
+   ASSERT( report, ( count > 1 )&&( 0 == strcmp( pairs[1].value, eve_birthday    )));
+   ASSERT( report, ( count > 2 )&&( 0 == strcmp( pairs[2].value, muriel_birthday )));
    ASSERT( report, utils_map_remove  ( map, "Toto" ) == false );
    ASSERT( report, utils_map_get_size( map, &card ));
    ASSERT( report, card == 3 );

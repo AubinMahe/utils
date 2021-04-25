@@ -1,5 +1,5 @@
-#include "tests_report.h"
-#include "iso6429.h"
+#include <tst/tests_report.h>
+#include <tst/iso6429.h>
 
 #include <execinfo.h>
 #include <stdarg.h>
@@ -34,7 +34,45 @@ struct tests_report {
 
 const struct tests_report tests_Zero = { PTHREAD_MUTEX_INITIALIZER, NULL, 0, 0, 0, 0 };
 
-int tests_run( int argc, char * argv[], ... ) {
+DLL_PUBLIC void tests_chapter( struct tests_report * ctxt, const char * title ) {
+   pthread_mutex_lock( &ctxt->lock );
+   if( ctxt->failed || ctxt->passed || ctxt->sum_failed || ctxt->sum_passed ) {
+      ctxt->sum_failed += ctxt->failed;
+      ctxt->sum_passed += ctxt->passed;
+      if( ctxt->failed == 0 ) {
+         printf( "   %d tests, %sall successful%s\n", ctxt->passed, ISO_6429_FG_GREEN, ISO_6429_RESET );
+      }
+      else if( ctxt->passed == 0 ) {
+         printf( "   %d tests, %sall failed%s\n", ctxt->failed, ISO_6429_FG_RED, ISO_6429_RESET );
+      }
+      else if( ctxt->failed > 0 ) {
+         printf( "   %d tests, %s%d successful%s, %s%d failed%s\n", ctxt->passed + ctxt->failed,
+            ISO_6429_FG_GREEN, ctxt->passed, ISO_6429_RESET,
+            ISO_6429_FG_RED  , ctxt->failed, ISO_6429_RESET );
+      }
+   }
+   ctxt->failed = 0;
+   ctxt->passed = 0;
+   if( title ) {
+      printf( "\n%s%s%s\n\n", ISO_6429_BOLD, title, ISO_6429_RESET );
+   }
+   pthread_mutex_unlock( &ctxt->lock );
+}
+
+DLL_PUBLIC void tests_assert( struct tests_report * ctxt, const char * test, bool test_result, const char * file, int line ) {
+   pthread_mutex_lock( &ctxt->lock );
+   if( test_result ) {
+      printf( "   %s %s\n", TEST_PASSED, test );
+      ++(ctxt->passed);
+   }
+   else {
+      printf( "   %s %s\t\t(%s:%d)\n", TEST_FAILED, test, file, line );
+      ++(ctxt->failed);
+   }
+   pthread_mutex_unlock( &ctxt->lock );
+}
+
+DLL_PUBLIC int tests_run( int argc, char * argv[], ... ) {
    struct tests_report This = tests_Zero;
    va_list tsts;
    va_start( tsts, argv );
@@ -77,7 +115,18 @@ int tests_run( int argc, char * argv[], ... ) {
       }
       chapter = chapter->next;
    }
-   tests_ended( &This );
+   tests_chapter( &This, NULL );
+   if( This.sum_failed == 0 ) {
+      printf( "\n%s%d tests, %sall successful%s\n", ISO_6429_BOLD, This.sum_passed, ISO_6429_FG_GREEN, ISO_6429_RESET );
+   }
+   else if( This.sum_passed == 0 ) {
+      printf( "\n%s%d tests, %sall failed%s\n", ISO_6429_BOLD, This.sum_failed, ISO_6429_FG_RED, ISO_6429_RESET );
+   }
+   else if( This.sum_failed > 0 ) {
+      printf( "\n%s%d tests, %s%d successful%s, %s%d failed%s\n", ISO_6429_BOLD, This.sum_passed + This.sum_failed,
+         ISO_6429_FG_GREEN, This.sum_passed, ISO_6429_RESET,
+         ISO_6429_FG_RED  , This.sum_failed, ISO_6429_RESET );
+   }
    chapter = This.tests;
    while( chapter ) {
       tests_chapter_t * next = chapter->next;
@@ -85,59 +134,4 @@ int tests_run( int argc, char * argv[], ... ) {
       chapter = next;
    }
    return EXIT_SUCCESS;
-}
-
-void tests_chapter( struct tests_report * ctxt, const char * title ) {
-   pthread_mutex_lock( &ctxt->lock );
-   if( ctxt->failed || ctxt->passed || ctxt->sum_failed || ctxt->sum_passed ) {
-      ctxt->sum_failed += ctxt->failed;
-      ctxt->sum_passed += ctxt->passed;
-      if( ctxt->failed == 0 ) {
-         printf( "   %d tests, %sall successful%s\n", ctxt->passed, ISO_6429_FG_GREEN, ISO_6429_RESET );
-      }
-      else if( ctxt->passed == 0 ) {
-         printf( "   %d tests, %sall failed%s\n", ctxt->failed, ISO_6429_FG_RED, ISO_6429_RESET );
-      }
-      else if( ctxt->failed > 0 ) {
-         printf( "   %d tests, %s%d successful%s, %s%d failed%s\n", ctxt->passed + ctxt->failed,
-            ISO_6429_FG_GREEN, ctxt->passed, ISO_6429_RESET,
-            ISO_6429_FG_RED  , ctxt->failed, ISO_6429_RESET );
-      }
-   }
-   ctxt->failed = 0;
-   ctxt->passed = 0;
-   if( title ) {
-      printf( "\n%s%s%s\n\n", ISO_6429_BOLD, title, ISO_6429_RESET );
-   }
-   pthread_mutex_unlock( &ctxt->lock );
-}
-
-void tests_assert( struct tests_report * ctxt, const char * test, bool test_result, const char * file, int line ) {
-   pthread_mutex_lock( &ctxt->lock );
-   if( test_result ) {
-      printf( "   %s %s\n", TEST_PASSED, test );
-      ++(ctxt->passed);
-   }
-   else {
-      printf( "   %s %s\t\t(%s:%d)\n", TEST_FAILED, test, file, line );
-      ++(ctxt->failed);
-   }
-   pthread_mutex_unlock( &ctxt->lock );
-}
-
-void tests_ended( struct tests_report * ctxt ) {
-   tests_chapter( ctxt, NULL );
-   pthread_mutex_lock( &ctxt->lock );
-   if( ctxt->sum_failed == 0 ) {
-      printf( "\n%s%d tests, %sall successful%s\n", ISO_6429_BOLD, ctxt->sum_passed, ISO_6429_FG_GREEN, ISO_6429_RESET );
-   }
-   else if( ctxt->sum_passed == 0 ) {
-      printf( "\n%s%d tests, %sall failed%s\n", ISO_6429_BOLD, ctxt->sum_failed, ISO_6429_FG_RED, ISO_6429_RESET );
-   }
-   else if( ctxt->sum_failed > 0 ) {
-      printf( "\n%s%d tests, %s%d successful%s, %s%d failed%s\n", ISO_6429_BOLD, ctxt->sum_passed + ctxt->sum_failed,
-         ISO_6429_FG_GREEN, ctxt->sum_passed, ISO_6429_RESET,
-         ISO_6429_FG_RED  , ctxt->sum_failed, ISO_6429_RESET );
-   }
-   pthread_mutex_unlock( &ctxt->lock );
 }

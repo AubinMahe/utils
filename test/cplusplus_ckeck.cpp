@@ -1,5 +1,7 @@
 #include <net/net_buff.h>
 
+#include <tst/tests_report.h>
+
 #include <utils/utils_cli.h>
 #include <utils/utils_map.h>
 #include <utils/utils_prefs.h>

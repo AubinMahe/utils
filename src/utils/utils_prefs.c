@@ -162,7 +162,7 @@ bool utils_prefs_get_string( utils_prefs prefs, const char * name, const char **
    if( This->map == NULL ) {
       return false;
    }
-   void * result = NULL;
+   map_value result = NULL;
    if( ! utils_map_get( This->map, name, &result )) {
       return false;
    }

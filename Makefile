@@ -5,6 +5,7 @@ CFLAGS = -pthread -std=c11 -I inc -fvisibility=hidden -D_DEFAULT_SOURCE=__STRICT
 
 SRCS =\
  src/net/net_buff.c\
+ src/tst/tests_report.c\
  src/utils/utils_cli.c\
  src/utils/utils_map.c\
  src/utils/utils_prefs.c\
@@ -13,7 +14,6 @@ SRCS =\
 
 SRCS_TST =\
  test/main.c\
- test/tests_report.c\
  test/net_buff_test.c\
  test/utils_cli_test.c\
  test/utils_map_test.c\
@@ -36,7 +36,7 @@ VALGRIND_OPTIONS =\
  --expensive-definedness-checks=yes
 
 .PHONY: all
-all: libutils-d.so libutils.so tests-d
+all: libutils.so libutils-d.so tests-d
 
 .PHONY: check-make
 check-make:
