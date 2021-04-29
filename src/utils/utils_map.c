@@ -86,7 +86,11 @@ DLL_PUBLIC bool utils_map_put( utils_map map, map_key key, map_value value ) {
       res->value = value;
    }
    if( This->trace_flags & UTILS_MAP_TRACE_PUT ) {
+#ifdef __linux
       fprintf( stderr, "%s: count = %ld, map_pair {%p, %p} added\n", __func__, This->count, (const void *)key, (const void *)value );
+#else
+      fprintf( stderr, "%s: count = %I64d, map_pair {%p, %p} added\n", __func__, This->count, (const void *)key, (const void *)value );
+#endif
    }
    return true;
 }
@@ -134,7 +138,11 @@ DLL_PUBLIC bool utils_map_remove( utils_map map, map_key key ) {
       ssize_t index = res - This->data;
       --This->count;
       if( This->trace_flags & UTILS_MAP_TRACE_REMOVE ) {
+#ifdef __linux
          fprintf( stderr, "%s: count = %ld, map_pair {%p, %p} removed\n", __func__, This->count, res->key, res->value );
+#else
+         fprintf( stderr, "%s: count = %I64d, map_pair {%p, %p} removed\n", __func__, This->count, res->key, res->value );
+#endif
       }
       memmove( res, res + 1, ( This->count - (size_t)index ) * sizeof( map_pair ));
       return true;
@@ -261,7 +269,11 @@ DLL_PUBLIC bool utils_map_clear( utils_map map ) {
       }
    }
    if( This->trace_flags & UTILS_MAP_TRACE_CLEAR ) {
+#ifdef __linux
       fprintf( stderr, "%s: %ld entr%s removed\n", __func__, This->count, ( This->count > 1 ) ? "ies" : "y" );
+#else
+      fprintf( stderr, "%s: %I64d entr%s removed\n", __func__, This->count, ( This->count > 1 ) ? "ies" : "y" );
+#endif
    }
    free( This->data );
    This->data  = NULL;

@@ -19,7 +19,7 @@ static int property_name_compare( const void * l, const void * r ) {
    return strcmp( *pl, *pr );
 }
 
-bool utils_prefs_load( utils_prefs * prefs, const char * program_name ) {
+DLL_PUBLIC bool utils_prefs_load( utils_prefs * prefs, const char * program_name ) {
    if(( prefs == NULL )||( program_name == NULL )) {
       return false;
    }
@@ -97,7 +97,7 @@ bool utils_prefs_load( utils_prefs * prefs, const char * program_name ) {
    return true;
 }
 
-bool utils_prefs_get_path( utils_prefs prefs, const char ** dest ) {
+DLL_PUBLIC bool utils_prefs_get_path( utils_prefs prefs, const char ** dest ) {
    if(( prefs == NULL )||( dest == NULL )) {
       return false;
    }
@@ -106,7 +106,7 @@ bool utils_prefs_get_path( utils_prefs prefs, const char ** dest ) {
    return true;
 }
 
-bool utils_prefs_get_boolean( utils_prefs prefs, const char * name, bool * value ) {
+DLL_PUBLIC bool utils_prefs_get_boolean( utils_prefs prefs, const char * name, bool * value ) {
    const char * s = NULL;
    if( utils_prefs_get_string( prefs, name, &s )) {
       if( 0 == strcmp( "true", s )) {
@@ -121,7 +121,7 @@ bool utils_prefs_get_boolean( utils_prefs prefs, const char * name, bool * value
    return false;
 }
 
-bool utils_prefs_get_ushort( utils_prefs prefs, const char * name, unsigned short * value ) {
+DLL_PUBLIC bool utils_prefs_get_ushort( utils_prefs prefs, const char * name, unsigned short * value ) {
    long lg = 0;
    if( utils_prefs_get_long( prefs, name, &lg )) {
       *value = (unsigned short)lg;
@@ -130,7 +130,7 @@ bool utils_prefs_get_ushort( utils_prefs prefs, const char * name, unsigned shor
    return false;
 }
 
-bool utils_prefs_get_int( utils_prefs prefs, const char * name, int * value ) {
+DLL_PUBLIC bool utils_prefs_get_int( utils_prefs prefs, const char * name, int * value ) {
    long lg = 0;
    if( utils_prefs_get_long( prefs, name, &lg )) {
       *value = (int)lg;
@@ -139,7 +139,7 @@ bool utils_prefs_get_int( utils_prefs prefs, const char * name, int * value ) {
    return false;
 }
 
-bool utils_prefs_get_long( utils_prefs prefs, const char * name, long * value ) {
+DLL_PUBLIC bool utils_prefs_get_long( utils_prefs prefs, const char * name, long * value ) {
    const char * s = NULL;
    if( ! utils_prefs_get_string( prefs, name, &s )) {
       return false;
@@ -154,7 +154,7 @@ bool utils_prefs_get_long( utils_prefs prefs, const char * name, long * value ) 
    return err &&( *err == '\0' );
 }
 
-bool utils_prefs_get_string( utils_prefs prefs, const char * name, const char ** value ) {
+DLL_PUBLIC bool utils_prefs_get_string( utils_prefs prefs, const char * name, const char ** value ) {
    if(( prefs == NULL )||( name == NULL )||( value == NULL )) {
       return false;
    }
@@ -170,7 +170,7 @@ bool utils_prefs_get_string( utils_prefs prefs, const char * name, const char **
    return true;
 }
 
-bool utils_prefs_delete( utils_prefs * prefs ) {
+DLL_PUBLIC bool utils_prefs_delete( utils_prefs * prefs ) {
    if( prefs == NULL ) {
       return false;
    }

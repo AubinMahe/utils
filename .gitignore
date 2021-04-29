@@ -54,3 +54,7 @@ dkms.conf
 /.settings/
 /tests-d
 /BUILD/
+/Win64/
+/Win64-lib/
+/Win64-tests/
+/x86_64-tests/

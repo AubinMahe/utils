@@ -1,15 +1,19 @@
 #include <tst/tests_report.h>
 #include <tst/iso6429.h>
 
-#include <execinfo.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 
-#define HEAVY_CHECK_MARK      "\u2714"
-#define HEAVY_BALLOT_X        "\u2718"
+#ifdef __linux
+#  define HEAVY_CHECK_MARK      "\u2714"
+#  define HEAVY_BALLOT_X        "\u2718"
+#else
+#  define HEAVY_CHECK_MARK      "S"
+#  define HEAVY_BALLOT_X        "\x9E"
+#endif
 
 #define TEST_PASSED           ISO_6429_FG_GREEN HEAVY_CHECK_MARK ISO_6429_RESET
 #define TEST_FAILED           ISO_6429_FG_RED   HEAVY_BALLOT_X   ISO_6429_RESET

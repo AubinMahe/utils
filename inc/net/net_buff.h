@@ -3,8 +3,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <netinet/in.h>
-
+#ifdef __linux
+#  include <netinet/in.h>
+#  define SOCKET int
+#else
+#  include <winsock2.h>
+#endif
 #include <utils/utils_visibility.h>
 
 #ifdef __cplusplus
@@ -34,8 +38,8 @@ DLL_PUBLIC bool net_buff_encode_float  ( net_buff   nb, float        src );
 DLL_PUBLIC bool net_buff_encode_double ( net_buff   nb, double       src );
 DLL_PUBLIC bool net_buff_encode_string ( net_buff   nb, const char * src );
 DLL_PUBLIC bool net_buff_flip          ( net_buff   nb );
-DLL_PUBLIC bool net_buff_send          ( net_buff   nb, int sckt, struct sockaddr_in * to );
-DLL_PUBLIC bool net_buff_receive       ( net_buff   nb, int sckt, struct sockaddr_in * from );
+DLL_PUBLIC bool net_buff_send          ( net_buff   nb, SOCKET sckt, struct sockaddr_in * to );
+DLL_PUBLIC bool net_buff_receive       ( net_buff   nb, SOCKET sckt, struct sockaddr_in * from );
 DLL_PUBLIC bool net_buff_wrap          ( net_buff * nb, byte * bytes, size_t capacity );
 DLL_PUBLIC bool net_buff_decode_boolean( net_buff   nb, bool *     dest );
 DLL_PUBLIC bool net_buff_decode_byte   ( net_buff   nb, byte *     dest );

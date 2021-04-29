@@ -1,6 +1,10 @@
 #include <net/net_buff.h>
 
-#include <arpa/inet.h>
+#ifdef __linux
+#  include <arpa/inet.h>
+#else
+#  include <winsock2.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -14,7 +18,7 @@ typedef struct {
 
 static bool byte_order_is_little = true;
 
-bool net_buff_new( net_buff * nb, size_t capacity ) {
+DLL_PUBLIC bool net_buff_new( net_buff * nb, size_t capacity ) {
    byte_order_is_little = ( htonl(1) != 1 );
    if(( nb == NULL )||( capacity == 0 )) {
       fprintf( stderr, "%s: null argument\n", __func__ );
@@ -33,7 +37,7 @@ bool net_buff_new( net_buff * nb, size_t capacity ) {
    return true;
 }
 
-bool net_buff_get_capacity( net_buff nb, size_t * capacity ) {
+DLL_PUBLIC bool net_buff_get_capacity( net_buff nb, size_t * capacity ) {
    if(( nb == NULL )||( capacity == 0 )) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -43,7 +47,7 @@ bool net_buff_get_capacity( net_buff nb, size_t * capacity ) {
    return true;
 }
 
-bool net_buff_get_limit( net_buff nb, size_t * limit ) {
+DLL_PUBLIC bool net_buff_get_limit( net_buff nb, size_t * limit ) {
    if( nb == NULL ) {
       return false;
    }
@@ -55,7 +59,7 @@ bool net_buff_get_limit( net_buff nb, size_t * limit ) {
    return true;
 }
 
-bool net_buff_get_position( net_buff nb, size_t * position ) {
+DLL_PUBLIC bool net_buff_get_position( net_buff nb, size_t * position ) {
    if(( nb == NULL )||( position == 0 )) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -65,7 +69,7 @@ bool net_buff_get_position( net_buff nb, size_t * position ) {
    return true;
 }
 
-bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
+DLL_PUBLIC bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
    if(( nb == NULL )||( dest == NULL )||( dest_size == 0 )) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -91,7 +95,11 @@ bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
             dest[pai+77] = '|';
          }
          size_t ai = 79 * i/16;
+#ifdef __linux
          sprintf( dest+ai, "%08lX ", i );
+#else
+         sprintf( dest+ai, "%08I64X ", i );
+#endif
          dest[ai+59] = ' ';
          dest[ai+60] = '|';
          dest[ai+77] = '|';
@@ -119,7 +127,7 @@ bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
    return true;
 }
 
-bool net_buff_clear( net_buff nb ) {
+DLL_PUBLIC bool net_buff_clear( net_buff nb ) {
    if( nb == NULL ) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -133,7 +141,7 @@ bool net_buff_clear( net_buff nb ) {
    return true;
 }
 
-bool net_buff_encode_boolean( net_buff nb, bool value ) {
+DLL_PUBLIC bool net_buff_encode_boolean( net_buff nb, bool value ) {
    if( nb == NULL ) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -152,7 +160,7 @@ bool net_buff_encode_boolean( net_buff nb, bool value ) {
    return true;
 }
 
-bool net_buff_encode_byte( net_buff nb, byte value ) {
+DLL_PUBLIC bool net_buff_encode_byte( net_buff nb, byte value ) {
    if( nb == NULL ) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -171,11 +179,11 @@ bool net_buff_encode_byte( net_buff nb, byte value ) {
    return true;
 }
 
-bool net_buff_encode_int8( net_buff nb, int8_t value ) {
+DLL_PUBLIC bool net_buff_encode_int8( net_buff nb, int8_t value ) {
    return net_buff_encode_byte( nb, (byte)value );
 }
 
-bool net_buff_encode_uint16( net_buff nb, uint16_t value ) {
+DLL_PUBLIC bool net_buff_encode_uint16( net_buff nb, uint16_t value ) {
    if( nb == NULL ) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -195,11 +203,11 @@ bool net_buff_encode_uint16( net_buff nb, uint16_t value ) {
    return true;
 }
 
-bool net_buff_encode_int16( net_buff nb, int16_t value ) {
+DLL_PUBLIC bool net_buff_encode_int16( net_buff nb, int16_t value ) {
    return net_buff_encode_uint16( nb, (uint16_t)value );
 }
 
-bool net_buff_encode_uint32( net_buff nb, uint32_t value ) {
+DLL_PUBLIC bool net_buff_encode_uint32( net_buff nb, uint32_t value ) {
    if( nb == NULL ) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -219,11 +227,11 @@ bool net_buff_encode_uint32( net_buff nb, uint32_t value ) {
    return true;
 }
 
-bool net_buff_encode_int32( net_buff nb, int32_t value ) {
+DLL_PUBLIC bool net_buff_encode_int32( net_buff nb, int32_t value ) {
    return net_buff_encode_uint32( nb, (uint32_t)value );
 }
 
-bool net_buff_encode_uint64( net_buff nb, uint64_t value ) {
+DLL_PUBLIC bool net_buff_encode_uint64( net_buff nb, uint64_t value ) {
    if( nb == NULL ) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -252,21 +260,21 @@ bool net_buff_encode_uint64( net_buff nb, uint64_t value ) {
    return true;
 }
 
-bool net_buff_encode_int64( net_buff nb, int64_t value ) {
+DLL_PUBLIC bool net_buff_encode_int64( net_buff nb, int64_t value ) {
    return net_buff_encode_uint64( nb, (uint64_t)value );
 }
 
-bool net_buff_encode_float( net_buff nb, float src ) {
+DLL_PUBLIC bool net_buff_encode_float( net_buff nb, float src ) {
    void * ptr = &src;
    return net_buff_encode_uint32( nb, *(uint32_t*)ptr );
 }
 
-bool net_buff_encode_double( net_buff nb, double src ) {
+DLL_PUBLIC bool net_buff_encode_double( net_buff nb, double src ) {
    void * ptr = &src;
    return net_buff_encode_uint64( nb, *(uint64_t *)ptr );
 }
 
-bool net_buff_encode_string( net_buff nb, const char * string ) {
+DLL_PUBLIC bool net_buff_encode_string( net_buff nb, const char * string ) {
    if( nb == NULL ) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -293,7 +301,7 @@ bool net_buff_encode_string( net_buff nb, const char * string ) {
    return true;
 }
 
-bool net_buff_flip( net_buff nb ) {
+DLL_PUBLIC bool net_buff_flip( net_buff nb ) {
    if( nb == NULL ) {
       return false;
    }
@@ -307,7 +315,7 @@ bool net_buff_flip( net_buff nb ) {
    return true;
 }
 
-bool net_buff_send( net_buff nb, int sckt, struct sockaddr_in * to ) {
+DLL_PUBLIC bool net_buff_send( net_buff nb, SOCKET sckt, struct sockaddr_in * to ) {
    if( nb == NULL ) {
       return false;
    }
@@ -319,17 +327,26 @@ bool net_buff_send( net_buff nb, int sckt, struct sockaddr_in * to ) {
       fprintf( stderr, "%s: internal buffer is null\n", __func__ );
       return false;
    }
+#ifdef __linux
    size_t  length = This->limit - This->position;
    ssize_t nbytes = sendto( sckt, This->buffer + This->position, length, 0, (struct sockaddr*)to, sizeof( struct sockaddr_in ));
+#else
+   int length = (int)( This->limit - This->position );
+   ssize_t nbytes = sendto( sckt, (char *)(This->buffer + This->position), length, 0, (struct sockaddr*)to, sizeof( struct sockaddr_in ));
+#endif
    if( nbytes >= 0 ) {
       This->position += (size_t)nbytes;
+#ifdef __linux
       return ((size_t)nbytes) == length;
+#else
+      return nbytes == length;
+#endif
    }
    perror( "sendto" );
    return false;
 }
 
-bool net_buff_wrap( net_buff * nb, byte * bytes, size_t capacity ) {
+DLL_PUBLIC bool net_buff_wrap( net_buff * nb, byte * bytes, size_t capacity ) {
    byte_order_is_little = ( htonl(1) != 1 );
    if(( nb == NULL )||( bytes == NULL )||( capacity == 0 )) {
       fprintf( stderr, "%s: null argument\n", __func__ );
@@ -349,7 +366,7 @@ bool net_buff_wrap( net_buff * nb, byte * bytes, size_t capacity ) {
    return true;
 }
 
-bool net_buff_receive( net_buff nb, int sckt, struct sockaddr_in * from ) {
+DLL_PUBLIC bool net_buff_receive( net_buff nb, SOCKET sckt, struct sockaddr_in * from ) {
    if(( nb == NULL )||( from == NULL )) {
       fprintf( stderr, "%s: null argument\n", __func__ );
       return false;
@@ -359,9 +376,15 @@ bool net_buff_receive( net_buff nb, int sckt, struct sockaddr_in * from ) {
       fprintf( stderr, "%s: You must call net_buff_new or net_buff_wrap first\n", __func__ );
       return false;
    }
-   socklen_t addrlen = sizeof( struct sockaddr_in );
+#ifdef __linux
    size_t    length  = This->limit - This->position;
+   socklen_t addrlen = sizeof( struct sockaddr_in );
    ssize_t   nbytes  = recvfrom( sckt, This->buffer + This->position, length, 0, (struct sockaddr *)from, &addrlen );
+#else
+   int     length  = (int)( This->limit - This->position );
+   int     addrlen = sizeof( struct sockaddr_in );
+   ssize_t nbytes  = recvfrom( sckt, (char *)(This->buffer + This->position), length, 0, (struct sockaddr *)from, &addrlen );
+#endif
    if( nbytes >= 0 ) {
       This->position += (size_t)nbytes;
       return true;
@@ -370,7 +393,7 @@ bool net_buff_receive( net_buff nb, int sckt, struct sockaddr_in * from ) {
    return false;
 }
 
-bool net_buff_decode_boolean( net_buff nb, bool * dest ) {
+DLL_PUBLIC bool net_buff_decode_boolean( net_buff nb, bool * dest ) {
    if( nb == NULL ) {
       return false;
    }
@@ -388,7 +411,7 @@ bool net_buff_decode_boolean( net_buff nb, bool * dest ) {
    return true;
 }
 
-bool net_buff_decode_byte( net_buff nb, byte * dest ) {
+DLL_PUBLIC bool net_buff_decode_byte( net_buff nb, byte * dest ) {
    if( nb == NULL ) {
       return false;
    }
@@ -406,11 +429,11 @@ bool net_buff_decode_byte( net_buff nb, byte * dest ) {
    return true;
 }
 
-bool net_buff_decode_int8( net_buff nb, int8_t * dest ) {
+DLL_PUBLIC bool net_buff_decode_int8( net_buff nb, int8_t * dest ) {
    return net_buff_decode_byte( nb, (byte *)dest );
 }
 
-bool net_buff_decode_uint16( net_buff nb, uint16_t * dest ) {
+DLL_PUBLIC bool net_buff_decode_uint16( net_buff nb, uint16_t * dest ) {
    if( nb == NULL ) {
       return false;
    }
@@ -428,11 +451,11 @@ bool net_buff_decode_uint16( net_buff nb, uint16_t * dest ) {
    return true;
 }
 
-bool net_buff_decode_int16( net_buff nb, int16_t * dest ) {
+DLL_PUBLIC bool net_buff_decode_int16( net_buff nb, int16_t * dest ) {
    return net_buff_decode_uint16( nb, (uint16_t *)dest );
 }
 
-bool net_buff_decode_uint32( net_buff nb, uint32_t * dest ) {
+DLL_PUBLIC bool net_buff_decode_uint32( net_buff nb, uint32_t * dest ) {
    if( nb == NULL ) {
       return false;
    }
@@ -450,11 +473,11 @@ bool net_buff_decode_uint32( net_buff nb, uint32_t * dest ) {
    return true;
 }
 
-bool net_buff_decode_int32( net_buff nb, int32_t * dest ) {
+DLL_PUBLIC bool net_buff_decode_int32( net_buff nb, int32_t * dest ) {
    return net_buff_decode_uint32( nb, (uint32_t *)dest );
 }
 
-bool net_buff_decode_uint64( net_buff nb, uint64_t * dest ) {
+DLL_PUBLIC bool net_buff_decode_uint64( net_buff nb, uint64_t * dest ) {
    if( nb == NULL ) {
       return false;
    }
@@ -482,19 +505,19 @@ bool net_buff_decode_uint64( net_buff nb, uint64_t * dest ) {
    return true;
 }
 
-bool net_buff_decode_int64( net_buff nb, int64_t * dest ) {
+DLL_PUBLIC bool net_buff_decode_int64( net_buff nb, int64_t * dest ) {
    return net_buff_decode_uint64( nb, (uint64_t *)dest );
 }
 
-bool net_buff_decode_float( net_buff nb, float * dest ) {
+DLL_PUBLIC bool net_buff_decode_float( net_buff nb, float * dest ) {
    return net_buff_decode_uint32( nb, (uint32_t *)dest );
 }
 
-bool net_buff_decode_double( net_buff nb, double * dest ) {
+DLL_PUBLIC bool net_buff_decode_double( net_buff nb, double * dest ) {
    return net_buff_decode_uint64( nb, (uint64_t *)dest );
 }
 
-bool net_buff_decode_string( net_buff nb, char * target, size_t target_size ) {
+DLL_PUBLIC bool net_buff_decode_string( net_buff nb, char * target, size_t target_size ) {
    if( nb == NULL ) {
       return false;
    }
@@ -527,7 +550,7 @@ bool net_buff_decode_string( net_buff nb, char * target, size_t target_size ) {
    return true;
 }
 
-bool net_buff_delete( net_buff * nb ) {
+DLL_PUBLIC bool net_buff_delete( net_buff * nb ) {
    if( nb == NULL ) {
       return false;
    }

@@ -15,7 +15,7 @@ typedef struct {
    const void **    data;
 } utils_set_private;
 
-bool utils_set_new( utils_set * set, utils_comparator comparator ) {
+DLL_PUBLIC bool utils_set_new( utils_set * set, utils_comparator comparator ) {
    if( set == NULL ) {
       return false;
    }
@@ -29,7 +29,7 @@ bool utils_set_new( utils_set * set, utils_comparator comparator ) {
    return true;
 }
 
-bool utils_set_add( utils_set set, const void * item ) {
+DLL_PUBLIC bool utils_set_add( utils_set set, const void * item ) {
    if( set == NULL ) {
       return false;
    }
@@ -45,7 +45,7 @@ bool utils_set_add( utils_set set, const void * item ) {
    return true;
 }
 
-bool utils_set_remove( utils_set set, const void * data, bool free_data ) {
+DLL_PUBLIC bool utils_set_remove( utils_set set, const void * data, bool free_data ) {
    if(( set == NULL )||( data == NULL )) {
       return false;
    }
@@ -68,7 +68,7 @@ bool utils_set_remove( utils_set set, const void * data, bool free_data ) {
    return false;
 }
 
-bool utils_set_replace( utils_set set, const void * old_data, const void * new_data, bool free_old_data ) {
+DLL_PUBLIC bool utils_set_replace( utils_set set, const void * old_data, const void * new_data, bool free_old_data ) {
    if(( set == NULL )||( old_data == NULL )) {
       return false;
    }
@@ -88,7 +88,7 @@ bool utils_set_replace( utils_set set, const void * old_data, const void * new_d
    return false;
 }
 
-bool utils_set_contains( utils_set set, const void * value, bool * result ) {
+DLL_PUBLIC bool utils_set_contains( utils_set set, const void * value, bool * result ) {
    if(( set == NULL )||( result == NULL )) {
       return false;
    }
@@ -101,7 +101,7 @@ bool utils_set_contains( utils_set set, const void * value, bool * result ) {
    return true;
 }
 
-bool utils_get_size( utils_set set, size_t * cardinality ) {
+DLL_PUBLIC bool utils_get_size( utils_set set, size_t * cardinality ) {
    if(( set == NULL )||( cardinality == NULL )) {
       return false;
    }
@@ -110,7 +110,7 @@ bool utils_get_size( utils_set set, size_t * cardinality ) {
    return true;
 }
 
-bool utils_set_foreach( utils_set set, utils_set_iterator iter, void * user_context ) {
+DLL_PUBLIC bool utils_set_foreach( utils_set set, utils_set_iterator iter, void * user_context ) {
    if( set == NULL ) {
       return false;
    }
@@ -123,7 +123,7 @@ bool utils_set_foreach( utils_set set, utils_set_iterator iter, void * user_cont
    return true;
 }
 
-bool utils_set_clear( utils_set set, bool free_data ) {
+DLL_PUBLIC bool utils_set_clear( utils_set set, bool free_data ) {
    if( set == NULL ) {
       return false;
    }
@@ -142,7 +142,7 @@ bool utils_set_clear( utils_set set, bool free_data ) {
    return true;
 }
 
-bool utils_set_delete( utils_set * pset, bool free_data ) {
+DLL_PUBLIC bool utils_set_delete( utils_set * pset, bool free_data ) {
    if( pset && utils_set_clear( *pset, free_data )) {
       free( *pset );
       *pset = NULL;
