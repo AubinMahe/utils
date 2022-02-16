@@ -1,10 +1,12 @@
 #include <net/net_buff.h>
+#include <utils/utils_error_stack.h>
 
 #ifdef __linux
 #  include <arpa/inet.h>
 #else
 #  include <winsock2.h>
 #endif
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -21,12 +23,10 @@ static bool byte_order_is_little = true;
 DLL_PUBLIC bool net_buff_new( net_buff * nb, size_t capacity ) {
    byte_order_is_little = ( htonl(1) != 1 );
    if(( nb == NULL )||( capacity == 0 )) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "null argument" );
    }
    if( *nb ) {
-      fprintf( stderr, "%s: *nb must be null \n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "*nb must be null" );
    }
    net_buff_private * This = malloc( sizeof( net_buff_private ));
    memset( This, 0, sizeof( net_buff_private ));
@@ -39,8 +39,7 @@ DLL_PUBLIC bool net_buff_new( net_buff * nb, size_t capacity ) {
 
 DLL_PUBLIC bool net_buff_get_capacity( net_buff nb, size_t * capacity ) {
    if(( nb == NULL )||( capacity == 0 )) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    *capacity = This->capacity;
@@ -49,10 +48,10 @@ DLL_PUBLIC bool net_buff_get_capacity( net_buff nb, size_t * capacity ) {
 
 DLL_PUBLIC bool net_buff_get_limit( net_buff nb, size_t * limit ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    if( limit == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "limit: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    *limit = This->limit;
@@ -60,9 +59,11 @@ DLL_PUBLIC bool net_buff_get_limit( net_buff nb, size_t * limit ) {
 }
 
 DLL_PUBLIC bool net_buff_get_position( net_buff nb, size_t * position ) {
-   if(( nb == NULL )||( position == 0 )) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+   if( nb == NULL ) {
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
+   }
+   if( position == 0 ) {
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "position: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    *position = This->position;
@@ -70,15 +71,19 @@ DLL_PUBLIC bool net_buff_get_position( net_buff nb, size_t * position ) {
 }
 
 DLL_PUBLIC bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
-   if(( nb == NULL )||( dest == NULL )||( dest_size == 0 )) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+   if( nb == NULL ) {
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
+   }
+   if( dest == NULL ) {
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "dest: null argument" );
+   }
+   if( dest_size == 0 ) {
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "dest_size: zero argument" );
    }
    memset( dest, 0, dest_size );
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    // 00005b20  00 00 00 00 00 00 00 00  01 00 00 00 00 00 00 00  |................|
    // 012345678901234567890123456789012345678901234567890123456789012345678901234567
@@ -86,7 +91,7 @@ DLL_PUBLIC bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
    size_t hi = 0, ti = 0;
    for( size_t i = 0; i < This->limit; ++i, hi += 3, ++ti ) {
       if( ti >= dest_size ) {
-         return false;
+         return utils_error_stack_push( __FILE__, __LINE__, __func__, "dest too small" );
       }
       if(( i % 16 ) == 0 ) {
          if( i > 0 ) {
@@ -129,12 +134,11 @@ DLL_PUBLIC bool net_buff_dump( net_buff nb, char * dest, size_t dest_size ) {
 
 DLL_PUBLIC bool net_buff_clear( net_buff nb ) {
    if( nb == NULL ) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    This->position = 0;
    This->limit    = This->capacity;
@@ -143,17 +147,14 @@ DLL_PUBLIC bool net_buff_clear( net_buff nb ) {
 
 DLL_PUBLIC bool net_buff_encode_boolean( net_buff nb, bool value ) {
    if( nb == NULL ) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + 1 > This->limit ) {
-      fprintf( stderr, "%s: overflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "overflow" );
    }
    This->buffer[This->position] = value ? 1 : 0;
    This->position += 1;
@@ -162,17 +163,14 @@ DLL_PUBLIC bool net_buff_encode_boolean( net_buff nb, bool value ) {
 
 DLL_PUBLIC bool net_buff_encode_byte( net_buff nb, byte value ) {
    if( nb == NULL ) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( value ) > This->limit ) {
-      fprintf( stderr, "%s: overflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "overflow" );
    }
    This->buffer[This->position] = value;
    This->position += sizeof( value );
@@ -185,17 +183,14 @@ DLL_PUBLIC bool net_buff_encode_int8( net_buff nb, int8_t value ) {
 
 DLL_PUBLIC bool net_buff_encode_uint16( net_buff nb, uint16_t value ) {
    if( nb == NULL ) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( value ) > This->limit ) {
-      fprintf( stderr, "%s: overflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "overflow" );
    }
    uint16_t encoded_value = htons( value );
    memcpy( This->buffer + This->position, &encoded_value, sizeof( encoded_value ));
@@ -209,17 +204,14 @@ DLL_PUBLIC bool net_buff_encode_int16( net_buff nb, int16_t value ) {
 
 DLL_PUBLIC bool net_buff_encode_uint32( net_buff nb, uint32_t value ) {
    if( nb == NULL ) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( value ) > This->limit ) {
-      fprintf( stderr, "%s: overflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "overflow" );
    }
    uint32_t encoded_value = htonl( value );
    memcpy( This->buffer + This->position, &encoded_value, sizeof( encoded_value ));
@@ -233,17 +225,14 @@ DLL_PUBLIC bool net_buff_encode_int32( net_buff nb, int32_t value ) {
 
 DLL_PUBLIC bool net_buff_encode_uint64( net_buff nb, uint64_t value ) {
    if( nb == NULL ) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( value ) > This->limit ) {
-      fprintf( stderr, "%s: overflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "overflow" );
    }
    if( byte_order_is_little ) {
       value = (( value & 0xFF00000000000000LL ) >> 56 )
@@ -276,25 +265,21 @@ DLL_PUBLIC bool net_buff_encode_double( net_buff nb, double src ) {
 
 DLL_PUBLIC bool net_buff_encode_string( net_buff nb, const char * string ) {
    if( nb == NULL ) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    size_t length = strlen( string );
    uint32_t encoded_length = htonl((uint32_t)length );
    if( This->position + sizeof( encoded_length ) > This->limit ) {
-      fprintf( stderr, "%s: overflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "overflow" );
    }
    memcpy( This->buffer + This->position, &encoded_length, sizeof( encoded_length ));
    This->position += sizeof( encoded_length );
    if( This->position + length > This->limit ) {
-      fprintf( stderr, "%s: overflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "overflow" );
    }
    memcpy( This->buffer + This->position, string, length );
    This->position += length;
@@ -303,12 +288,11 @@ DLL_PUBLIC bool net_buff_encode_string( net_buff nb, const char * string ) {
 
 DLL_PUBLIC bool net_buff_flip( net_buff nb ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    This->limit = This->position;
    This->position = 0;
@@ -317,15 +301,14 @@ DLL_PUBLIC bool net_buff_flip( net_buff nb ) {
 
 DLL_PUBLIC bool net_buff_send( net_buff nb, SOCKET sckt, struct sockaddr_in * to ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    if( to == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "to: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
 #ifdef __linux
    size_t  length = This->limit - This->position;
@@ -342,19 +325,22 @@ DLL_PUBLIC bool net_buff_send( net_buff nb, SOCKET sckt, struct sockaddr_in * to
       return nbytes == length;
 #endif
    }
-   perror( "sendto" );
-   return false;
+   return utils_error_stack_push( __FILE__, __LINE__, __func__, "sendto:%s", strerror( errno ));
 }
 
 DLL_PUBLIC bool net_buff_wrap( net_buff * nb, byte * bytes, size_t capacity ) {
    byte_order_is_little = ( htonl(1) != 1 );
-   if(( nb == NULL )||( bytes == NULL )||( capacity == 0 )) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+   if( nb == NULL ) {
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
+   }
+   if( bytes == NULL ) {
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "bytes: null argument" );
+   }
+   if( capacity == 0 ) {
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "capacity: zero argument" );
    }
    if( *nb ) {
-      fprintf( stderr, "%s: *nb must be null \n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "*nb must be null" );
    }
    net_buff_private * This = malloc( sizeof( net_buff_private ));
    memset( This, 0, sizeof( net_buff_private ));
@@ -368,13 +354,11 @@ DLL_PUBLIC bool net_buff_wrap( net_buff * nb, byte * bytes, size_t capacity ) {
 
 DLL_PUBLIC bool net_buff_receive( net_buff nb, SOCKET sckt, struct sockaddr_in * from ) {
    if(( nb == NULL )||( from == NULL )) {
-      fprintf( stderr, "%s: null argument\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: You must call net_buff_new or net_buff_wrap first\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
 #ifdef __linux
    size_t    length  = This->limit - This->position;
@@ -389,22 +373,19 @@ DLL_PUBLIC bool net_buff_receive( net_buff nb, SOCKET sckt, struct sockaddr_in *
       This->position += (size_t)nbytes;
       return true;
    }
-   perror( "recvfrom" );
-   return false;
+   return utils_error_stack_push( __FILE__, __LINE__, __func__, "recvfrom:%s", strerror( errno ));
 }
 
 DLL_PUBLIC bool net_buff_decode_boolean( net_buff nb, bool * dest ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + 1 > This->limit ) {
-      fprintf( stderr, "%s: underflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "underflow" );
    }
    *dest = This->buffer[This->position] != 0;
    This->position += 1;
@@ -413,16 +394,14 @@ DLL_PUBLIC bool net_buff_decode_boolean( net_buff nb, bool * dest ) {
 
 DLL_PUBLIC bool net_buff_decode_byte( net_buff nb, byte * dest ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( byte ) > This->limit ) {
-      fprintf( stderr, "%s: underflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "underflow" );
    }
    *dest = This->buffer[This->position];
    This->position += 1;
@@ -435,16 +414,14 @@ DLL_PUBLIC bool net_buff_decode_int8( net_buff nb, int8_t * dest ) {
 
 DLL_PUBLIC bool net_buff_decode_uint16( net_buff nb, uint16_t * dest ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( uint16_t ) > This->limit ) {
-      fprintf( stderr, "%s: underflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "underflow" );
    }
    *dest = ntohs( *(uint16_t *)( This->buffer + This->position ));
    This->position += sizeof( *dest );
@@ -457,16 +434,14 @@ DLL_PUBLIC bool net_buff_decode_int16( net_buff nb, int16_t * dest ) {
 
 DLL_PUBLIC bool net_buff_decode_uint32( net_buff nb, uint32_t * dest ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( uint32_t ) > This->limit ) {
-      fprintf( stderr, "%s: underflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "underflow" );
    }
    *dest = ntohl( *(uint32_t *)( This->buffer + This->position ));
    This->position += sizeof( *dest );
@@ -479,16 +454,14 @@ DLL_PUBLIC bool net_buff_decode_int32( net_buff nb, int32_t * dest ) {
 
 DLL_PUBLIC bool net_buff_decode_uint64( net_buff nb, uint64_t * dest ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( uint64_t ) > This->limit ) {
-      fprintf( stderr, "%s: underflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "underflow" );
    }
    *dest = *(uint64_t *)( This->buffer + This->position );
    if( byte_order_is_little ) {
@@ -519,30 +492,25 @@ DLL_PUBLIC bool net_buff_decode_double( net_buff nb, double * dest ) {
 
 DLL_PUBLIC bool net_buff_decode_string( net_buff nb, char * target, size_t target_size ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    net_buff_private * This = (net_buff_private *)nb;
    if( This->buffer == NULL ) {
-      fprintf( stderr, "%s: internal buffer is null\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "internal buffer is null" );
    }
    if( This->position + sizeof( uint32_t ) > This->limit ) {
-      fprintf( stderr, "%s: underflow (length)\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "underflow" );
    }
    uint32_t length = ntohl( *(uint32_t *)( This->buffer + This->position ));
    if( This->position + sizeof( length ) >= This->limit ) {
-      fprintf( stderr, "%s: underflow\n", __func__ );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "underflow" );
    }
    if( This->position + length > This->limit ) {
-      fprintf( stderr, "%s: underflow (string length = %d)\n", __func__, length );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "underflow (string length = %d)", length );
    }
    This->position += sizeof( length );
    if( length >= target_size ) {
-      fprintf( stderr, "%s: too small target buffer, %d bytes needed\n", __func__, length+1 );
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "too small target buffer, %d bytes needed\n", length+1 );
    }
    strncpy( target, (char *)( This->buffer + This->position ), length );
    target[length] = '\0';
@@ -552,7 +520,7 @@ DLL_PUBLIC bool net_buff_decode_string( net_buff nb, char * target, size_t targe
 
 DLL_PUBLIC bool net_buff_delete( net_buff * nb ) {
    if( nb == NULL ) {
-      return false;
+      return utils_error_stack_push( __FILE__, __LINE__, __func__, "nb: null argument" );
    }
    if( *nb ) {
       net_buff_private * This = (net_buff_private *)*nb;

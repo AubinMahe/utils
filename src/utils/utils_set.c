@@ -29,10 +29,11 @@ DLL_PUBLIC bool utils_set_new( utils_set * set, utils_comparator comparator ) {
    return true;
 }
 
-DLL_PUBLIC bool utils_set_add( utils_set set, const void * item ) {
+DLL_PUBLIC bool utils_set_add( utils_set set, const void * item, bool free_data ) {
    if( set == NULL ) {
       return false;
    }
+   utils_set_remove( set, item, free_data );
    utils_set_private * This = (utils_set_private *)set;
    const void ** data = realloc( This->data, ( 1 + This->count ) * sizeof( const void * ));
    if( data == NULL ) {

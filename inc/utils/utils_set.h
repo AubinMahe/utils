@@ -16,7 +16,7 @@ typedef bool ( * utils_set_iterator)( size_t index, const void * data, void * us
 typedef bool ( * utils_set_comparator)( const void * left, const void * right );
 
 DLL_PUBLIC bool utils_set_new     ( utils_set * set, utils_comparator comparator );
-DLL_PUBLIC bool utils_set_add     ( utils_set   set, const void * data );
+DLL_PUBLIC bool utils_set_add     ( utils_set   set, const void * data, bool free_data );
 DLL_PUBLIC bool utils_set_remove  ( utils_set   set, const void * data, bool free_data );
 DLL_PUBLIC bool utils_set_replace ( utils_set   set, const void * old_data, const void * new_data, bool free_old_data );
 DLL_PUBLIC bool utils_set_contains( utils_set   set, const void * data, bool * result );

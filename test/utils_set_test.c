@@ -40,9 +40,9 @@ void utils_set_test( struct tests_report * report ) {
    ASSERT( report, card == 0);
    ASSERT( report, utils_set_contains( set, "Aubin", &own ));
    ASSERT( report, own == false );
-   ASSERT( report, utils_set_add     ( set, "Muriel" ));
-   ASSERT( report, utils_set_add     ( set, "Eve" ));
-   ASSERT( report, utils_set_add     ( set, "Aubin" ));
+   ASSERT( report, utils_set_add     ( set, "Muriel", false ));
+   ASSERT( report, utils_set_add     ( set, "Eve"   , false ));
+   ASSERT( report, utils_set_add     ( set, "Aubin" , false ));
    ASSERT( report, utils_get_size    ( set, &card ));
    ASSERT( report, card == 3);
    ASSERT( report, utils_set_contains( set, "Aubin" , &own ));
@@ -58,7 +58,7 @@ void utils_set_test( struct tests_report * report ) {
    ASSERT( report, own == false );
    ASSERT( report, utils_get_size    ( set, &card ));
    ASSERT( report, card == 2);
-   ASSERT( report, utils_set_add     ( set, "Eve" ));
+   ASSERT( report, utils_set_add     ( set, "Eve", false ));
    ASSERT( report, utils_set_contains( set, "Eve", &own ));
    ASSERT( report, own);
    ASSERT( report, utils_get_size    ( set, &card ));

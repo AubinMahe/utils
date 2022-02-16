@@ -12,6 +12,8 @@ SRCS :=\
  src/net/net_buff.c\
  src/tst/tests_report.c\
  src/utils/utils_cli.c\
+ src/utils/utils_error_stack.c\
+ src/utils/utils_file.c\
  src/utils/utils_map.c\
  src/utils/utils_prefs.c\
  src/utils/utils_set.c\
